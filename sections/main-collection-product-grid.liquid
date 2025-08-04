@@ -1,0 +1,186 @@
+{%- style -%}
+
+/* 🌟 Container Layout */
+.collection-filter {
+  grid-column: 1/2;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  padding: 2rem;
+  margin-bottom: 3rem;
+}
+
+/* 🔽 Summary Dropdown */
+.collection-filter details {
+  margin-bottom: 2rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+.collection-filter summary {
+  padding: 1rem 1.2rem;
+  background-color: #f8f8f8;
+  font-weight: 600;
+  font-size: 24px;
+  color: #333;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* ✅ Checkbox Group Styling */
+.collection-filter input[type="checkbox"] {
+  margin-right: 10px;
+  accent-color: #0077cc;
+}
+.collection-filter label {
+  display: flex;
+  align-items: center;
+  padding: 0.6rem 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #555;
+}
+.collection-filter ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+/* 💰 Price Range Inputs */
+.filter-group-display__price-range {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+.filter-group-display__price-range input {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 18px;
+}
+
+/* 🔘 Buttons */
+input[type="submit"] {
+  background-color: #0077cc;
+  color: #fff;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  padding: 0.7rem 1.5rem;
+  margin-top: 1rem;
+  transition: background-color 0.3s ease;
+}
+input[type="submit"]:hover {
+  background-color: #005fa3;
+}
+
+/* ❌ Active Filter Labels */
+.collection-filter > div:last-child a {
+  background-color: #f0f0f0;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  color: #333;
+  text-decoration: none;
+  font-size: 20px;
+  margin-right: 0.5rem;
+  display: inline-block;
+  margin-bottom: 0.5rem;
+  transition: background 0.3s ease;
+  position: relative;
+}
+.collection-filter > div:last-child a:hover {
+  background-color: #ff0000ff;
+  color:white;
+}
+
+.collection-filter > div:last-child a .remove-icon {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width:20px;
+  height:20px; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ff0000ff;
+  color:white;
+  border-radius:50px;
+  font-size:14px;
+}
+
+/* 🌈 Visual Display */
+.visual-display__child {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  background: #ccc;
+  border-radius: 4px;
+  margin-right: 10px;
+}
+
+
+  .collection-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+{%- endstyle -%}
+
+<div class="collection-page" style="display: grid; grid-template-columns: repeat(4, 1fr); align-items:center;">
+  <div>{%- render 'collection-filter', collection: collection -%}</div>
+
+  <div style="grid-column: 2/5;">
+    <div class="collection-header">
+      <h5>Products ({{ collection.all_products_count }})</h5>
+      <div style="display: flex;">
+        <label for="sort-by">Sort By: </label>
+        <select name="sort-by" id="sort-by" class="sort-by">
+          {%- for option in collection.sort_options -%}
+            <option value="{{ option.value }}" 
+              {%- if option.value == collection.sort_by -%} selected {%- endif -%}
+            >{{ option.name }}</option>
+          {%- endfor -%}
+        </select>
+      </div>
+    </div>
+    <div class="collection-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); align-items:center;">
+      {%- paginate collection.products by 8 -%}
+        
+        {%- for product in collection.products -%}
+          <div>
+            {%- render 'product-card', product: product -%}
+          </div>
+        {%- endfor -%}
+
+        <div>{{- paginate | default_pagination -}}</div>
+
+      {%- endpaginate -%}
+    </div>
+  </div>
+</div>
+
+
+
+<script>
+  Shopify.queryParams = {};
+
+  const params = new URLSearchParams(window.location.search);
+
+  params.forEach((value, key) => {
+    Shopify.queryParams[key] = value;
+  });
+
+  document.querySelector('.sort-by').addEventListener('change', function (e) {
+    const value = e.currentTarget.value;
+    Shopify.queryParams.sort_by = value;
+
+    // Replace current URL query string
+    window.location.search = new URLSearchParams(Shopify.queryParams).toString();
+  });
+
+</script>

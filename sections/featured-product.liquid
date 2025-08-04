@@ -1,0 +1,78 @@
+{%- assign product = all_products[section.settings.product] -%}
+
+{%- if product != blank -%}
+  <div class="featured-product" style="display: grid; grid-template-columns: repeat(2, 1fr); align-items:center;">
+    <div class="product-img">
+      <img src="{{ product.featured_image | img_url: "master" }}" width="100%" alt="{{ product.title | escape }}">
+    </div>
+    <div class="product-content">
+      <h2>{{ product.title | escape }}</h2>
+      <p>{{ product.price | money }} <span style="text-decoration: line-through">{{ product.compare_at_price | money }}</span></p>
+      <p>{{ product.description | truncatewords: 120 }}</p>
+      {%- form 'product', product -%}
+        <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
+
+        
+
+        <label for="variant">Variants</label>
+        <select name="id" id="variant">
+          {%- for variant in product.variants -%}
+            <option value="{{ variant.id }}">{{ variant.title }}</option>
+          {%- endfor -%}
+        </select>
+
+        
+        <div class="product-quantity">
+          <button type="button" id="decreaseBtn">-</button>
+          <input type="text" name="quantity" id="quantity" value="1" min="1">
+          <button type="button" id="increaseBtn">+</button>
+        </div>
+
+        <button type="submit">Add To Cart</button>
+      {%- endform -%}
+    </div>
+  </div>
+{%- else -%}
+    <h3>Please select a product first</h3>
+{%- endif -%}
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const increaseBtn = document.getElementById('increaseBtn');
+    const decreaseBtn = document.getElementById('decreaseBtn');
+    const quantityInput = document.getElementById('quantity');
+
+    increaseBtn.addEventListener("click", () => {
+      let currentValue = parseInt(quantityInput.value) || 1;
+      quantityInput.value = currentValue + 1;
+    });
+
+    decreaseBtn.addEventListener("click", () => {
+      let currentValue = parseInt(quantityInput.value) || 1;
+      if (currentValue > 1) {
+        quantityInput.value = currentValue - 1;
+      }
+    });
+  });
+
+</script>
+
+{% schema %}
+  {
+    "name": "Featured Product",
+    "tag": "section",
+    "settings": [
+      {
+        "type": "product",
+        "id": "product",
+        "label": "Select A Product"
+      },
+    ],
+    "presets": [
+      {
+        "name": "Featured Product",
+        "category": "Product"
+      }
+    ]
+  }
+{% endschema %}

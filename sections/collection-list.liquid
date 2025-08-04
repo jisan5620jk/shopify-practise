@@ -1,0 +1,8 @@
+<div class="collection-list" style="display: grid; grid-template-columns: repeat(3, 1fr); align-items:center;">
+  {%- for collection in collections -%}
+    <div class="colllection-card">
+      <img src="{{ collection.featured_image | img_url: "master" }}" width="100%" alt="{{ collection.title }}">
+      <h3>{{ collection.title | link_to: collection.url }}</h3>
+    </div>
+  {%- endfor -%}
+</div>

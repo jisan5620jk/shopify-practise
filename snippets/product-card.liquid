@@ -1,0 +1,28 @@
+<div class="collection-box">
+    <a href="{{ product.url | url_escape }}">
+        <img src="{{ product.featured_image | img_url: 'master' }}" width="100%" alt="{{ product.title | escape }}">
+    </a>
+
+    <a href="{{ product.url | url_escape }}">
+        <h4>{{ product.title | escape }}</h4>
+    </a>
+
+    <p>
+        {%- if product.price <= product.compare_at_price -%}
+            {%- if product.price_varies -%}
+                {{ product.price_min | money }} - {{ product.price_max | money }}
+            {%- else -%}
+                {{ product.price | money }}
+                <span style="text-decoration: line-through;">{{ product.compare_at_price | money }}</span>
+            {%- endif -%}
+            {%- else -%}
+            {%- if product.price_varies -%}
+                {{ product.price_min | money }} - {{ product.price_max | money }}
+            {%- else -%}
+                {{ product.price | money }}
+            {% endif %}
+        {%- endif -%}
+    </p>
+
+    <p>{{ product.description | truncatewords: 16 }}</p>
+</div>
