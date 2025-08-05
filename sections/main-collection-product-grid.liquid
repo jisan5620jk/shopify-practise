@@ -1,135 +1,45 @@
 {%- style -%}
 
-/* 🌟 Container Layout */
-.collection-filter {
-  grid-column: 1/2;
-  background-color: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
-  padding: 2rem;
-  margin-bottom: 3rem;
-}
-
-/* 🔽 Summary Dropdown */
-.collection-filter details {
-  margin-bottom: 2rem;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-.collection-filter summary {
-  padding: 1rem 1.2rem;
-  background-color: #f8f8f8;
-  font-weight: 600;
-  font-size: 24px;
-  color: #333;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-/* ✅ Checkbox Group Styling */
-.collection-filter input[type="checkbox"] {
-  margin-right: 10px;
-  accent-color: #0077cc;
-}
-.collection-filter label {
-  display: flex;
-  align-items: center;
-  padding: 0.6rem 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #555;
-}
-.collection-filter ul {
-  list-style: none;
-  padding-left: 0;
-  margin: 0;
-}
-
-/* 💰 Price Range Inputs */
-.filter-group-display__price-range {
-  display: flex;
-  gap: 1.5rem;
-  margin-top: 1rem;
-}
-.filter-group-display__price-range input {
-  width: 100%;
-  padding: 0.6rem 0.8rem;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 18px;
-}
-
-/* 🔘 Buttons */
-input[type="submit"] {
-  background-color: #0077cc;
-  color: #fff;
-  font-weight: 600;
-  border: none;
-  border-radius: 6px;
-  padding: 0.7rem 1.5rem;
-  margin-top: 1rem;
-  transition: background-color 0.3s ease;
-}
-input[type="submit"]:hover {
-  background-color: #005fa3;
-}
-
-/* ❌ Active Filter Labels */
-.collection-filter > div:last-child a {
-  background-color: #f0f0f0;
-  padding: 0.4rem 0.8rem;
-  border-radius: 20px;
-  color: #333;
-  text-decoration: none;
-  font-size: 20px;
-  margin-right: 0.5rem;
-  display: inline-block;
-  margin-bottom: 0.5rem;
-  transition: background 0.3s ease;
-  position: relative;
-}
-.collection-filter > div:last-child a:hover {
-  background-color: #ff0000ff;
-  color:white;
-}
-
-.collection-filter > div:last-child a .remove-icon {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  width:20px;
-  height:20px; 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #ff0000ff;
-  color:white;
-  border-radius:50px;
-  font-size:14px;
-}
-
-/* 🌈 Visual Display */
-.visual-display__child {
-  display: inline-block;
-  width: 20px;
-  height: 20px;
-  background: #ccc;
-  border-radius: 4px;
-  margin-right: 10px;
-}
-
-
   .collection-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
   }
-  
+
 {%- endstyle -%}
+
+
+{%- assign product_limit = section.settings.product_limit -%}
+
+{%- assign show_second_image = section.settings.show_second_image -%}
+
+{%- liquid
+  
+  case section.settings.column
+    when 2
+      assign column = 2
+    when 3
+      assign column = 3
+    when 4
+      assign column = 4
+    when 5
+      assign column = 5
+    when 6
+      assign column = 3
+    when 8
+      assign column = 4
+    when 10
+      assign column = 5
+    when 12
+      assign column = 4
+      
+    else
+      assign column = 4
+  endcase
+
+-%}
+
+
 
 <div class="collection-page" style="display: grid; grid-template-columns: repeat(4, 1fr); align-items:center;">
   <div>{%- render 'collection-filter', collection: collection -%}</div>
@@ -148,16 +58,19 @@ input[type="submit"]:hover {
         </select>
       </div>
     </div>
-    <div class="collection-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); align-items:center;">
-      {%- paginate collection.products by 8 -%}
+    <div class="collection-grid" style="display: grid; align-items: center; gap: 20px; grid-template-columns: repeat({{ column }}, 1fr);">
+      {%- paginate collection.products by product_limit -%}
         
         {%- for product in collection.products -%}
           <div>
-            {%- render 'product-card', product: product -%}
+            {%- render 'product-card', 
+              product: product ,
+              show_second_image: show_second_image
+            -%}
           </div>
         {%- endfor -%}
 
-        <div>{{- paginate | default_pagination -}}</div>
+        <div>{%- render 'collection-pagination', paginate: paginate -%}</div>
 
       {%- endpaginate -%}
     </div>
@@ -184,3 +97,40 @@ input[type="submit"]:hover {
   });
 
 </script>
+{% schema %}
+  {
+    "name": "Collection all",
+    "settings": [
+      {
+        "type": "checkbox",
+        "id": "show_second_image",
+        "label": "Show Second Image",
+        "default": true
+      },
+      {
+        "type": "range",
+        "id": "product_limit",
+        "min": 2,
+        "max": 12,
+        "step": 1,
+        "label": "Select number product you see!",
+        "default": 8
+      },
+      {
+        "type": "range",
+        "id": "column",
+        "min": 2,
+        "max": 12,
+        "step": 1,
+        "label": "Select number column!",
+        "default": 4
+      },
+    ],
+    "presets": [
+      {
+        "name": "Collection all",
+        "category": "collection"
+      }
+    ]
+  }
+{% endschema %}

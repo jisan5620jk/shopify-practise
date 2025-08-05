@@ -1,0 +1,46 @@
+{%- style -%}
+  .pagination {
+    display: flex;
+    align-items: center;
+    list-style:none;
+    gap: 10px;
+    justify-content: center;
+  }
+  .pagination li ,
+  .pagination li a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: 1px solid #ddd;
+    font-size: 18px;
+    color: black;
+  }
+  .pagination li.active {
+    background: black;
+    color: white;
+  }
+{%- endstyle -%}
+
+{%- if paginate.pages > 1 -%}
+        <ul class="pagination">
+            {%- if paginate.previous -%}
+                <li>
+                    <a href="{{ paginate.previous.url }}">&laquo;</a>
+                </li>
+            {%- endif -%}
+            {%- for part in paginate.parts -%}
+                {%- if part.is_link -%}
+                    <li><a href="{{ part.url }}">{{ part.title }}</a></li>
+                {%- else -%}
+                    <li class="{%- if part.title == paginate.current_page -%} active {%- endif -%}">{{ part.title }}</li>
+                {%- endif -%}
+            {%- endfor -%}
+            {%- if paginate.next -%}
+                <li>
+                    <a href="{{ paginate.next.url }}">&raquo;</a>
+                </li>
+            {%- endif -%}
+        </ul>
+{%- endif -%}
