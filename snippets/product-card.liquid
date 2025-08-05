@@ -31,22 +31,28 @@
         <h4>{{ product.title | escape }}</h4>
     </a>
 
-    <p>
-        {%- if product.price <= product.compare_at_price -%}
-            {%- if product.price_varies -%}
-                {{ product.price_min | money }} - {{ product.price_max | money }}
-            {%- else -%}
-                {{ product.price | money }}
-                <span style="text-decoration: line-through;">{{ product.compare_at_price | money }}</span>
-            {%- endif -%}
-            {%- else -%}
-            {%- if product.price_varies -%}
-                {{ product.price_min | money }} - {{ product.price_max | money }}
-            {%- else -%}
-                {{ product.price | money }}
-            {% endif %}
-        {%- endif -%}
-    </p>
+    {%- form 'product', product -%}
+        <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
 
-    <p>{{ product.description | truncatewords: 16 }}</p>
+        <p>
+            {%- if product.price <= product.compare_at_price -%}
+                {%- if product.price_varies -%}
+                    {{ product.price_min | money }} - {{ product.price_max | money }}
+                {%- else -%}
+                    {{ product.price | money }}
+                    <span style="text-decoration: line-through;">{{ product.compare_at_price | money }}</span>
+                {%- endif -%}
+                {%- else -%}
+                {%- if product.price_varies -%}
+                    {{ product.price_min | money }} - {{ product.price_max | money }}
+                {%- else -%}
+                    {{ product.price | money }}
+                {% endif %}
+            {%- endif -%}
+        </p>
+
+        <p>{{ product.description | truncatewords: 16 }}</p>      
+         
+        <button type="submit">Add To Cart</button>
+    {%- endform -%}
 </div>

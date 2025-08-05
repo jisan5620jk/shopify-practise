@@ -1,4 +1,4 @@
-<div class="header-section">
+<div class="header-section" style="display: flex; align-items: center; justify-content: space-between; margin: 0 120px">
   <div class="header-logo">
     <a href="{{ shop.url | escape }}" title="{{ shop.title | escape }}">
       {% if section.settings.header_logo %}
@@ -15,13 +15,24 @@
 
   <div class="header-menu">
     {% if section.settings.header_menu != blank and section.settings.header_menu.links != blank %}
-      <ul>
+      <ul style="display: flex; align-items: center; gap: 20px; list-style: none;">
         {% for link in section.settings.header_menu.links %}
           <li><a href="{{ link.url | escape }}">{{ link.title | escape }}</a></li>
         {% endfor %}
       </ul>
     {% endif %}
   </div>
+
+  <div class="header-icons">
+    <a href="{{ routes.cart_url }}">
+      {%- if cart.item_count > 0 -%}
+        {%- render 'icons', icon: 'bag-fill' -%} ({{ cart.item_count }})
+      {%- else -%}
+        {%- render 'icons', icon: 'bag' -%}
+      {%- endif -%}
+    </a>
+  </div>
+
 </div>
 
 {% schema %}
