@@ -209,8 +209,8 @@
     </div>
     {%- if product.images.size > 1 -%}
       <div class="thumbnail-row">
-        {%- for image in product.images -%}
-          <img class="thumbnail {% if image.src == product.featured_image %} active {% endif %}" src="{{ image.src | img_url: 'master' }}" data-large="{{ image.src | img_url: 'master' }}" />
+        {%- for image in product.media -%}
+          <img class="thumbnail {% if image.src == product.featured_image %} active {% endif %}" src="{{ image.src | img_url: 'master' }}" data-large="{{ image.src | img_url: 'master' }}" media-id="{{ image.id }}" />
         {%- endfor -%}
       </div>
     {%- endif -%}
@@ -280,7 +280,7 @@
                   </fieldset>
                 {% endfor %}
               </div>
-              
+
             {% endunless %}
 
           {%- when 'quantity' -%}
@@ -381,10 +381,12 @@
 
   document.addEventListener('DOMContentLoaded', function () {
     const variants = window.productVariants;
-    const selectedVariant = window.selectedVariant;
-
     const fieldsets = document.querySelectorAll('.product-variants fieldset');
+    const hiddenInput = document.getElementById('selected-variant-id');
+    const cartBtnWrapper = document.querySelector('.product-cart-btn');
+    const cartBtn = cartBtnWrapper?.querySelector('button');
 
+    // ইউজারের সিলেক্টেড অপশনগুলো রিটার্ন করে (array)
     function getSelectedOptions() {
       return Array.from(fieldsets).map((fieldset) => {
         const checkedInput = fieldset.querySelector('input[type="radio"]:checked');
@@ -392,77 +394,115 @@
       });
     }
 
-    function updateOptions() {
+    // সিলেক্টেড variant ID update করবে hidden input-এ
+    function updateSelectedVariantId() {
       const selectedOptions = getSelectedOptions();
 
-      fieldsets.forEach((fieldset, optionIndex) => {
-        const radios = fieldset.querySelectorAll('input[type="radio"]');
-
-        radios.forEach((radio) => {
-          const testOptions = [...selectedOptions];
-          testOptions[optionIndex] = radio.value;
-
-          const matching = variants.find((variant) => {
-            return variant.options.every((opt, i) => {
-              return !testOptions[i] || testOptions[i] === opt;
-            });
-          });
-
-          radio.disabled = !(matching && matching.available);
-
-          // Optional: add/remove disabled class for styling (if you have one)
-          if (radio.disabled) {
-            radio.closest('label')?.classList.add('disabled');
-          } else {
-            radio.closest('label')?.classList.remove('disabled');
-          }
+      const matchedVariant = variants.find(variant => {
+        return variant.options.every((opt, i) => {
+          return !selectedOptions[i] || selectedOptions[i] === opt;
         });
       });
+
+      if (matchedVariant) {
+        hiddenInput.value = matchedVariant.id;
+
+        const event = new CustomEvent('variant:updated', {
+          detail: {
+            variant: matchedVariant
+          }
+        });
+        document.dispatchEvent(event);
+      }
     }
 
-    // Initial run
-    updateOptions();
+    // ইউজার অপশন চেঞ্জ করলে update হবে
+    function onOptionChange() {
+      updateSelectedVariantId();
+    }
 
-    // Listen for any changes
+    // প্রতিটি radio input এ change ইভেন্ট লিসেনার বসানো
     fieldsets.forEach((fieldset) => {
-      fieldset.addEventListener('change', updateOptions);
-    });
-  });
-
-  const variants = window.productVariants;
-  const fieldsets = document.querySelectorAll('fieldset');
-  const hiddenInput = document.getElementById('selected-variant-id');
-
-  function getSelectedOptions() {
-    return Array.from(fieldsets).map(fieldset => {
-      const checked = fieldset.querySelector('input[type="radio"]:checked');
-      return checked ? checked.value : null;
-    });
-  }
-
-  function updateSelectedVariantId() {
-    const selectedOptions = getSelectedOptions();
-
-    const matchedVariant = variants.find(variant => {
-      return variant.options.every((opt, i) => {
-        return !selectedOptions[i] || selectedOptions[i] === opt;
+      const radios = fieldset.querySelectorAll('input[type="radio"]');
+      radios.forEach((radio) => {
+        radio.addEventListener('change', onOptionChange);
       });
     });
 
-    if (matchedVariant) {
-      hiddenInput.value = matchedVariant.id;
-    }
-  }
+    // প্রথমবার load এর সময় variant ID সেট করা
+    updateSelectedVariantId();
 
-  fieldsets.forEach(fieldset => {
-    const radios = fieldset.querySelectorAll('input[type="radio"]');
-    radios.forEach(radio => {
-      radio.addEventListener('change', updateSelectedVariantId);
+    // variant update হলে Add to Cart নিয়ন্ত্রণ
+    document.addEventListener('variant:updated', function (e) {
+      const variant = e.detail.variant;
+
+      if (variant && !variant.available) {
+        // যদি ভ্যারিয়েন্ট unavailable হয়
+        cartBtn.setAttribute('disabled', 'disabled');
+        cartBtn.textContent = 'Sold Out';
+        cartBtn.classList.add('opacity-50', 'cursor-not-allowed');
+      } else {
+        // যদি ভ্যারিয়েন্ট available হয়
+        cartBtn.removeAttribute('disabled');
+        cartBtn.textContent = 'Add To Cart';
+        cartBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      }
     });
   });
 
-  // initial set on page load
-  updateSelectedVariantId();
+
+  // variant-url-updater.js
+  document.addEventListener('variant:updated', function (event) {
+    const variant = event.detail.variant;
+
+    if (!variant) return;
+
+    // Update URL without reload
+    const url = new URL(window.location.href);
+    url.searchParams.set('variant', variant.id);
+    window.history.replaceState({}, '', url);
+
+    // Optionally log the selected variant
+    console.log('Selected variant:', variant);
+  });
+
+  // variant price update
+  document.addEventListener('variant:updated', function (event) {
+    const variant = event.detail.variant;
+    if (!variant) return;
+
+    // ✅ Update the URL without page reload
+    const url = new URL(window.location.href);
+    url.searchParams.set('variant', variant.id);
+    window.history.replaceState({}, '', url);
+
+    // ✅ Select elements
+    const priceEl = document.querySelector('.product-discount-price');
+    const comparePriceEl = document.querySelector('.product-main-price');
+
+    if (!priceEl || !comparePriceEl) return;
+
+    // ✅ Convert cents to currency string manually (without formatMoney)
+    const price = (variant.price / 100).toFixed(2);
+    const compareAtPrice = variant.compare_at_price
+      ? (variant.compare_at_price / 100).toFixed(2)
+      : null;
+
+    // ✅ Update price in DOM
+    priceEl.textContent = price;
+
+    if (compareAtPrice && variant.compare_at_price > variant.price) {
+      comparePriceEl.textContent = compareAtPrice;
+      comparePriceEl.style.display = 'inline-block';
+    } else {
+      comparePriceEl.style.display = 'none';
+    }
+  });
+
+
+
+
+
   // Tumbnail tab
 
   document.addEventListener("DOMContentLoaded", () => {
@@ -473,11 +513,33 @@
       thumbnail.addEventListener('click', () => {
         const newSrc = thumbnail.getAttribute('data-large');
         currentImage.src = newSrc;
+
         thumbnails.forEach(t => t.classList.remove('active'));
         thumbnail.classList.add('active');
       });
     });
+
+    document.addEventListener('variant:updated', function (e) {
+      const variant = e.detail.variant;
+
+      // যদি variant এর সাথে featured_media থাকে
+      if (variant.featured_media && variant.featured_media.id) {
+        const mediaId = variant.featured_media.id.toString(); // ensure string
+        const matchedThumbnail = Array.from(thumbnails).find(thumbnail => {
+          return thumbnail.getAttribute('media-id') === mediaId;
+        });
+
+        if (matchedThumbnail) {
+          const newSrc = matchedThumbnail.getAttribute('data-large');
+          currentImage.src = newSrc;
+
+          thumbnails.forEach(t => t.classList.remove('active'));
+          matchedThumbnail.classList.add('active');
+        }
+      }
+    });
   });
+
 
   document.addEventListener("DOMContentLoaded", () => {
     const increaseBtn = document.getElementById('increaseBtn');

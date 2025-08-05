@@ -69,10 +69,16 @@
         "padding_top": 36,
         "padding_bottom": 28
       }
+    },
+    "related_product_HXRD9Q": {
+      "type": "related-product",
+      "name": "Releted Product",
+      "settings": {}
     }
   },
   "order": [
     "main",
+    "related_product_HXRD9Q",
     "related-products"
   ]
 }
