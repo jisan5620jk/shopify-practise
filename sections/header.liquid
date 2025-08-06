@@ -23,7 +23,11 @@
     {% endif %}
   </div>
 
-  <div class="header-icons">
+  <div class="header-right" style="display: flex; gap: 40px;">
+    <form action="{{ routes.search_url }}" style="display: flex;">
+      <input type="text" name="q" placeholder="Search..." value="{{ search.terms }}">
+      <button type="submit">{%- render 'icons', icon: 'search' -%}</button>
+    </form>
     <a href="{{ routes.cart_url }}">
       {%- if cart.item_count > 0 -%}
         {%- render 'icons', icon: 'bag-fill' -%} ({{ cart.item_count }})

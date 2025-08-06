@@ -1,0 +1,24 @@
+
+  <div class="article-box">
+
+    {% if article.image %}
+      <a href="{{ article.url | url_escape }}">
+          <img src="{{ article.image | img_url: 'master' }}" width="100%" alt="{{ article.title | escape }}">
+      </a>
+    {% endif %}
+
+    <a href="{{ article.url | url_escape }}">
+        <h4>{{ article.title | escape }}</h4>
+    </a>
+
+    <p>
+      {% if article.description != blank %}
+        {{ article.description | truncatewords: 16 }}
+      {% elsif article.excerpt != blank %}
+        {{ article.excerpt | truncatewords: 16 }}
+      {% else %}
+        {{ article.content | strip_html | truncatewords: 16 }}
+      {% endif %}
+    </p>   
+
+  </div>
