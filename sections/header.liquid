@@ -23,7 +23,17 @@
     {% endif %}
   </div>
 
-  <div class="header-right" style="display: flex; gap: 40px;">
+  <div class="header-right" style="display: flex; gap: 25px;">
+    {%- form 'currency' -%}
+      <select name="currency" class="shopify-currency-form" onchange="this.form.submit()">
+        {% for currency in shop.enabled_currencies %}
+          <option value="{{ currency.iso_code }}" {% if currency == cart.currency %}selected{% endif %}>
+            {{ currency.iso_code }} ({{ currency.symbol }})
+          </option>
+        {% endfor %}
+      </select>
+
+    {%- endform -%}
     <form action="{{ routes.search_url }}" style="display: flex;">
       <input type="text" name="q" placeholder="Search..." value="{{ search.terms }}">
       <button type="submit">{%- render 'icons', icon: 'search' -%}</button>

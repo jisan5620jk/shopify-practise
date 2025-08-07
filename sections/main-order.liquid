@@ -89,6 +89,8 @@
   }
 </style>
 
+
+
 {% if order and customer %}
   <div class="order-container">
     <h1>Order #{{ order.name }}</h1>
@@ -127,8 +129,9 @@
       <thead>
         <tr>
           <th>Product</th>
-          <th>Qty</th>
           <th>Price</th>
+          <th>Quantity</th>
+          <th>Total Price</th>
         </tr>
       </thead>
       <tbody>
@@ -143,13 +146,15 @@
                 {{ line_item.product.title | escape }}
               {% endif %}
 
-              {% if line_item.variant.title != blank %}
-                <p class="text-small"> - {{ line_item.variant.title }}</p>
+              {% if line_item.variant.title != blank and line_item.variant.title != 'Default Title' %}
+                <p class="text-small">{{ line_item.variant.title }}</p>
               {% endif %}
-
             </td>
+
+            <td>{{ line_item.final_price | money }}</td>
             <td>{{ line_item.quantity }}</td>
-            <td>{{ line_item.line_price | money }}</td>
+            <td>{{ line_item.final_line_price | money }}</td>
+
           </tr>
         {% endfor %}
       </tbody>
@@ -172,18 +177,20 @@
       <div class="order-box summary-box">
         <h3>Order Summary</h3>
         <p>Subtotal: {{ order.subtotal_price | money }}</p>
+
         {% if order.shipping_price > 0 %}
           <p>Shipping: {{ order.shipping_price | money }}</p>
         {% endif %}
-        {% if order.total_tax > 0 %}
-          <p>Tax: {{ order.total_tax | money }}</p>
-        {% endif %}
+
+        <p>Tax: {{ order.tax_price | money }}</p>
+
         <p class="total">Total: {{ order.total_price | money }}</p>
       </div>
+
     </div>
   </div>
 {% else %}
   <div class="login-required">
-    <p>You must be <a href="/account/login">logged in</a> to view this order.</p>
+    <p>You must be <a href="{{ routes.account_login_url }}">logged in</a> to view this order.</p>
   </div>
 {% endif %}
