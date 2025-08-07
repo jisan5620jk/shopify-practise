@@ -28,6 +28,11 @@
       <input type="text" name="q" placeholder="Search..." value="{{ search.terms }}">
       <button type="submit">{%- render 'icons', icon: 'search' -%}</button>
     </form>
+    {% if customer %}
+      <a href="{{ routes.account_url }}">Profile</a>
+    {% else %}
+      <a href="{{ routes.account_login_url }}">Login</a>
+    {% endif %}
     <a href="{{ routes.cart_url }}">
       {%- if cart.item_count > 0 -%}
         {%- render 'icons', icon: 'bag-fill' -%} ({{ cart.item_count }})
