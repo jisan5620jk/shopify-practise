@@ -450,22 +450,6 @@
     });
   });
 
-
-  // variant-url-updater.js
-  document.addEventListener('variant:updated', function (event) {
-    const variant = event.detail.variant;
-
-    if (!variant) return;
-
-    // Update URL without reload
-    const url = new URL(window.location.href);
-    url.searchParams.set('variant', variant.id);
-    window.history.replaceState({}, '', url);
-
-    // Optionally log the selected variant
-    console.log('Selected variant:', variant);
-  });
-
   // variant price update
   document.addEventListener('variant:updated', function (event) {
     const variant = event.detail.variant;
@@ -500,7 +484,6 @@
   });
 
   // Tumbnail tab
-
   document.addEventListener("DOMContentLoaded", () => {
     const thumbnails = document.querySelectorAll('.thumbnail');
     const currentImage = document.getElementById('currentImage');
@@ -537,6 +520,7 @@
   });
 
 
+  // Quantity
   document.addEventListener("DOMContentLoaded", () => {
     const increaseBtn = document.getElementById('increaseBtn');
     const decreaseBtn = document.getElementById('decreaseBtn');
@@ -555,6 +539,7 @@
     });
   });
   
+  // variant active
   document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll('.product-variants .sizes').forEach(group => {
       const items = group.querySelectorAll('li');

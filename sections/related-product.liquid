@@ -1,63 +1,67 @@
 <div
   class="product-recommendations"
-  data-url="{{ routes.product_recommendations_url }}?section_id={{ section.id }}&product_id={{ product.id }}&limit=4&intent=related"
+  data-url="{{ routes.product_recommendations_url }}?section_id=related-product&product_id={{ product.id }}&limit=4&intent=related"
 >
-  <pre>
-performed: {{ recommendations.performed }}
-count: {{ recommendations.products_count }}
-data: {{ recommendations | json }}
-</pre>
 
-  {%- if recommendations.performed and recommendations.products_count > 0 -%}
-    {% if recommendations.intent == 'related' %}
-      <h2>Related Products</h2>
-    {% elsif recommendations.intent == 'complementary' %}
-      <h2>Pair it with</h2>
-    {% endif %}
+  {% if recommendations.performed and recommendations.products_count > 0 %}
+    <h2 class="text-xl font-bold mb-4">
+      {% if recommendations.intent == 'related' %}
+        Related Products
+      {% elsif recommendations.intent == 'complementary' %}
+        Pair it with
+      {% endif %}
+    </h2>
 
-    <div style="display: grid; grid-template-columns: repeat(4, 1fr); align-items: center;">
-      {%- for product in recommendations.products -%}
-        <div>{% render 'product-card', product: product %}</div>
-      {%- endfor -%}
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">
+      {% for product in recommendations.products %}
+        <div>
+          {% render 'product-card', product: product %}
+        </div>
+      {% endfor %}
     </div>
-  {%- endif -%}
+  {% endif %}
 </div>
 
-{% javascript %}
-  const productRecommendationsSection = document.querySelector('.product-recommendations');
-  if (!productRecommendationsSection) return;
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const section = document.querySelector('.product-recommendations');
+    if (!section) return;
 
-  const handleIntersection = (entries, observer) => {
-    if (!entries[0].isIntersecting) return;
+    const url = section.dataset.url;
+    if (!url) return;
 
-    observer.unobserve(productRecommendationsSection);
+    const observer = new IntersectionObserver((entries, observer) => {
+      if (!entries[0].isIntersecting) return;
+      observer.unobserve(section);
 
-    const url = productRecommendationsSection.dataset.url;
+      fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const temp = document.createElement('div');
+          temp.innerHTML = html;
 
-    fetch(url)
-      .then(response => response.text())
-      .then(text => {
-        const html = document.createElement('div');
-        html.innerHTML = text;
-        const recommendations = html.querySelector('.product-recommendations');
+          const inner = temp.querySelector('.product-recommendations');
+          if (inner && inner.innerHTML.trim()) {
+            section.innerHTML = inner.innerHTML;
+          } else {
+            section.remove(); // Remove if no products
+          }
+        })
+        .catch(err => {
+          console.error('Error loading recommendations:', err);
+        });
+    }, {
+      rootMargin: '0px 0px 200px 0px'
+    });
 
-        if (recommendations && recommendations.innerHTML.trim().length) {
-          productRecommendationsSection.innerHTML = recommendations.innerHTML;
-        }
-      })
-      .catch(e => console.error('Failed to load recommendations:', e));
-  };
-
-  const observer = new IntersectionObserver(handleIntersection, {
-    rootMargin: '0px 0px 200px 0px'
+    observer.observe(section);
   });
-
-  observer.observe(productRecommendationsSection);
-{% endjavascript %}
+</script>
 
 {% schema %}
 {
   "name": "Related Product",
+  "tag": "section",
   "settings": [],
   "presets": [
     {
