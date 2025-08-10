@@ -313,7 +313,20 @@
       {%- endif -%}
     {% endcomment %}
 
+
+
+
+
+
+
+
+
+    
+    
+
+      {%- if settings.cart_type == 'drawer' -%}
     {%- render 'custom-cart-drawer' -%}
+    {% endif %}
 
     {% sections 'header-group' %}
 
@@ -377,11 +390,13 @@
       <script src="{{ 'predictive-search.js' | asset_url }}" defer="defer"></script>
     {%- endif -%}
 
-    {%- if settings.cart_type == 'drawer' -%}
+    {% comment %} {%- if settings.cart_type == 'drawer' -%}
       <script src="{{ 'cart-drawer.js' | asset_url }}" defer="defer"></script>
-    {%- endif -%}
+    {%- endif -%} {% endcomment %}
 
     {% comment %} Custom CArt Drawer {% endcomment %}
-    <script src="{{ 'custom-cart-drawer.js' | asset_url }}" defer></script>
+    {%- if settings.cart_type == 'drawer' -%}
+      <script src="{{ 'custom-cart-drawer.js' | asset_url }}" defer></script>
+    {% endif %}
   </body>
 </html>
