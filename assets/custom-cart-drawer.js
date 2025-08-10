@@ -5,14 +5,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const closeBtn = document.getElementById('closeDrawerBtn');
 
   const openDrawer = () => {
-    drawer.classList.remove('-translate-x-full');
+    drawer.classList.remove('translate-x-full');
     drawer.classList.add('translate-x-0');
     overlay.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
   };
 
   const closeDrawer = () => {
-    drawer.classList.add('-translate-x-full');
+    drawer.classList.add('translate-x-full');
     drawer.classList.remove('translate-x-0');
     overlay.classList.add('hidden');
     document.body.style.overflow = '';
