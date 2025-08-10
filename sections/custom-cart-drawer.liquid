@@ -1,5 +1,5 @@
 <!-- drawer -->
-<aside
+<div
   id="Drawer"
   class="fixed inset-y-0 left-0 w-64 bg-white shadow-lg transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out z-30"
 >
@@ -20,7 +20,40 @@
       <li><a href="#" class="block px-3 py-2 rounded hover:bg-indigo-600 hover:text-white transition">Team</a></li>
     </ul>
   </nav>
-</aside>
+</div>
 
 <!-- Overlay -->
 <div id="overlay" class="fixed inset-0 bg-black bg-opacity-30 hidden md:hidden z-20"></div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    const openBtn = document.getElementById('openSidebarBtn');
+    const closeBtn = document.getElementById('closeSidebarBtn');
+
+    const toggleSidebar = (show) => {
+      sidebar.classList.toggle('-translate-x-full', !show);
+      overlay.classList.toggle('hidden', !show);
+      document.body.style.overflow = show ? 'hidden' : '';
+    };
+
+    openBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      toggleSidebar(true);
+    });
+
+    closeBtn.onclick = () => toggleSidebar(false);
+    overlay.onclick = () => toggleSidebar(false);
+
+    window.onresize = () => toggleSidebar(window.innerWidth >= 768);
+
+    document.onkeydown = (e) => {
+      if (e.key === 'Escape' && !sidebar.classList.contains('-translate-x-full')) {
+        toggleSidebar(false);
+      }
+    };
+
+    toggleSidebar(window.innerWidth >= 768);
+  });
+</script>
