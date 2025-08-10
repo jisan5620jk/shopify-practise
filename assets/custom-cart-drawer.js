@@ -1,32 +1,32 @@
-  document.addEventListener('DOMContentLoaded', () => {
-    const drawer = document.getElementById('drawer');
-    const overlay = document.getElementById('overlay');
-    const openBtn = document.getElementById('openDrawerBtn');
-    const closeBtn = document.getElementById('closeDrawerBtn');
+document.addEventListener('DOMContentLoaded', () => {
+  const drawer = document.getElementById('drawer');
+  const overlay = document.getElementById('overlay');
+  const openBtn = document.getElementById('openDrawerBtn');
+  const closeBtn = document.getElementById('closeDrawerBtn');
 
-    const toggleDrawer = (show) => {
-      drawer.classList.toggle('-translate-x-full', !show);
-      overlay.classList.toggle('hidden', !show);
-      document.body.style.overflow = show ? 'hidden' : '';
-    };
+  const openDrawer = () => {
+    drawer.classList.remove('-translate-x-full');
+    drawer.classList.add('translate-x-0');
+    overlay.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  };
 
-    openBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      toggleDrawer(true);
-    });
+  const closeDrawer = () => {
+    drawer.classList.add('-translate-x-full');
+    drawer.classList.remove('translate-x-0');
+    overlay.classList.add('hidden');
+    document.body.style.overflow = '';
+  };
 
-    closeBtn.addEventListener('click', () => toggleDrawer(false));
-    overlay.addEventListener('click', () => toggleDrawer(false));
-
-    window.addEventListener('resize', () => {
-      toggleDrawer(window.innerWidth >= 768);
-    });
-
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !drawer.classList.contains('-translate-x-full')) {
-        toggleDrawer(false);
-      }
-    });
-
-    toggleDrawer(window.innerWidth >= 768);
+  openBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    openDrawer();
   });
+
+  closeBtn.addEventListener('click', closeDrawer);
+  overlay.addEventListener('click', closeDrawer);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeDrawer();
+  });
+});
