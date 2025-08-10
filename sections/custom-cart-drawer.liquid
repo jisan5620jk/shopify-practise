@@ -1,6 +1,6 @@
-<!-- drawer -->
+<!-- Drawer -->
 <div
-  id="Drawer"
+  id="drawer"
   class="fixed inset-y-0 left-0 w-64 bg-white shadow-lg transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out z-30"
 >
   <div class="flex items-center justify-between px-4 py-3 border-b">
@@ -27,33 +27,33 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', () => {
-    const sidebar = document.getElementById('sidebar');
+    const drawer = document.getElementById('drawer');
     const overlay = document.getElementById('overlay');
-    const openBtn = document.getElementById('openSidebarBtn');
-    const closeBtn = document.getElementById('closeSidebarBtn');
+    const openBtn = document.getElementById('openDrawerBtn');
+    const closeBtn = document.getElementById('closeDrawerBtn');
 
-    const toggleSidebar = (show) => {
-      sidebar.classList.toggle('-translate-x-full', !show);
+    const toggleDrawer = (show) => {
+      drawer.classList.toggle('-translate-x-full', !show);
       overlay.classList.toggle('hidden', !show);
       document.body.style.overflow = show ? 'hidden' : '';
     };
 
     openBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      toggleSidebar(true);
+      toggleDrawer(true);
     });
 
-    closeBtn.onclick = () => toggleSidebar(false);
-    overlay.onclick = () => toggleSidebar(false);
+    closeBtn.onclick = () => toggleDrawer(false);
+    overlay.onclick = () => toggleDrawer(false);
 
-    window.onresize = () => toggleSidebar(window.innerWidth >= 768);
+    window.onresize = () => toggleDrawer(window.innerWidth >= 768);
 
     document.onkeydown = (e) => {
-      if (e.key === 'Escape' && !sidebar.classList.contains('-translate-x-full')) {
-        toggleSidebar(false);
+      if (e.key === 'Escape' && !Drawer.classList.contains('-translate-x-full')) {
+        toggleDrawer(false);
       }
     };
 
-    toggleSidebar(window.innerWidth >= 768);
+    toggleDrawer(window.innerWidth >= 768);
   });
 </script>
