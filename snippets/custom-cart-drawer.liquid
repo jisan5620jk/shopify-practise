@@ -50,21 +50,21 @@
               <div class="flex items-center justify-between gap-2 bg-[#F8F8F8] max-w-[103px] w-full mt-2">
                 <button
                   type="button"
-                  class="decreaseBtn text-lg size-8"
+                  class="decreaseBtn text-lg size-8 inline-block"
                   data-line="{{ forloop.index }}"
                 >
                   −
                 </button>
                 <input
                   type="text"
-                  class="quantityInput text-base w-9"
+                  class="quantityInput text-base text-center w-9"
                   data-line="{{ forloop.index }}"
                   value="{{ item.quantity }}"
                   min="1"
                 >
                 <button
                   type="button"
-                  class="increaseBtn text-lg size-8"
+                  class="increaseBtn text-lg size-8 inline-block"
                   data-line="{{ forloop.index }}"
                 >
                   +
