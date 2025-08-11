@@ -38,3 +38,23 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.key === 'Escape') window.closeDrawer();
   });
 });
+
+
+  // Quantity
+  document.addEventListener('DOMContentLoaded', () => {
+    const increaseBtn = document.getElementById('increaseBtn');
+    const decreaseBtn = document.getElementById('decreaseBtn');
+    const quantityInput = document.getElementById('quantity');
+
+    increaseBtn.addEventListener('click', () => {
+      let currentValue = parseInt(quantityInput.value) || 1;
+      quantityInput.value = currentValue + 1;
+    });
+
+    decreaseBtn.addEventListener('click', () => {
+      let currentValue = parseInt(quantityInput.value) || 1;
+      if (currentValue > 1) {
+        quantityInput.value = currentValue - 1;
+      }
+    });
+  });

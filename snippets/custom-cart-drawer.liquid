@@ -21,6 +21,11 @@
         </div>
         <div>
           <h3>{{ item.title }}</h3>
+          <div class="product-quantity">
+            <button type="button" id="decreaseBtn">-</button>
+            <input type="text" name="quantity" id="quantity" value="1" min="1">
+            <button type="button" id="increaseBtn">+</button>
+          </div>
         </div>
       </div>
     {% endfor %}
