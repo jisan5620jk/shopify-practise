@@ -1,4 +1,4 @@
-<script>
+
   document.addEventListener('DOMContentLoaded', () => {
     const drawer = document.getElementById('drawer');
     const overlay = document.getElementById('overlay');
@@ -32,4 +32,3 @@
       if (e.key === 'Escape') closeDrawer();
     });
   });
-</script>
