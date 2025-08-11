@@ -13,7 +13,18 @@
       ✕
     </button>
   </div>
-  <div class="p-4 text-gray-700 text-lg">Cart Items</div>
+  <div class="p-4">
+    {% for item in cart.items %}
+      <div class="border-b border-black/10 last:border-b-none flex items-center gap-8">
+        <div class="w-32">
+          <img src="{{ item.image | img_url: 'master' }}" width="100%" height="auto">
+        </div>
+        <div>
+          <h3>{{ item.title }}</h3>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
 </div>
 
 <!-- Overlay -->
