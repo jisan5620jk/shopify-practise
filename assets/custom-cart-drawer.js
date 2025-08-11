@@ -93,25 +93,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // কার্ট আইটেম রিমুভ (quantity=0)
   const removeCartItem = (line) => {
-    showLoader(line);
+  showLoader(line);
 
-    fetch('/cart/change.js', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-      body: JSON.stringify({ line: parseInt(line), quantity: 0 })
-    })
-    .then(res => res.json())
-    .then(cart => {
-      hideLoader(line);
-      console.log('Item removed:', cart);
-      updateCartCount();
-      // যদি চাইলে ডম থেকে সরাতে পারো অথবা location.reload();
-    })
-    .catch(err => {
-      hideLoader(line);
-      console.error('Remove item failed:', err);
-    });
-  };
+  fetch('/cart/change.js', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+    body: JSON.stringify({ line: parseInt(line), quantity: 0 })
+  })
+  .then(res => res.json())
+  .then(cart => {
+    hideLoader(line);
+    updateCartCount();
+
+    // DOM থেকে item সরানো (যদি প্রতিটি আইটেমে data-line থাকে)
+    const itemEl = document.querySelector(`.cart-item[data-line="${line}"]`);
+    if (itemEl) {
+      itemEl.remove();
+    }
+
+    // যদি কার্ট খালি হয়ে যায়, তখন খালি মেসেজ দেখাও (প্রয়োজনে)
+    if (cart.items.length === 0) {
+      const cartContainer = document.querySelector('#cart-items-container');
+      if (cartContainer) {
+        cartContainer.innerHTML = '<p>Your cart is empty.</p>';
+      }
+    }
+  })
+  .catch(err => {
+    hideLoader(line);
+    console.error('Remove item failed:', err);
+  });
+};
+
 
   // Increase quantity বাটন
   document.querySelectorAll('.increaseBtn').forEach(btn => {
