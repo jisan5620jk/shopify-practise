@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-  // --- Drawer elements ---
   const drawer = document.getElementById('drawer');
   const overlay = document.getElementById('overlay');
   const closeBtn = document.getElementById('closeDrawerBtn');
@@ -41,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Loader show/hide
+  // Loader show/hide for quantity updates and remove (optional)
   const showLoader = (line) => {
     document.querySelector(`.item-loader[data-line="${line}"]`)?.classList.remove('hidden');
   };
@@ -65,18 +64,14 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   };
 
-  // Refresh drawer content
+  // Refresh drawer content WITHOUT loader (loader only on add to cart)
   const refreshCartDrawer = () => {
-    if (drawerLoader) drawerLoader.classList.remove('hidden');
-
     return fetch('/cart?view=drawer')
       .then(res => {
         if (!res.ok) throw new Error('Failed to fetch cart drawer HTML');
         return res.text();
       })
       .then(html => {
-        if (drawerLoader) drawerLoader.classList.add('hidden');
-
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
         const newCartContent = doc.querySelector('#cart-items-container');
@@ -88,7 +83,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       })
       .catch(err => {
-        if (drawerLoader) drawerLoader.classList.add('hidden');
         console.error('Error refreshing cart drawer:', err);
       });
   };
@@ -141,13 +135,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Attach event listeners on cart items inside drawer
   const attachCartItemEventListeners = () => {
-    // Clear existing event listeners by cloning (to avoid duplicates)
+    // Remove old event listeners by cloning nodes
     document.querySelectorAll('.increaseBtn').forEach(btn => btn.replaceWith(btn.cloneNode(true)));
     document.querySelectorAll('.decreaseBtn').forEach(btn => btn.replaceWith(btn.cloneNode(true)));
     document.querySelectorAll('.quantityInput').forEach(input => input.replaceWith(input.cloneNode(true)));
     document.querySelectorAll('.remove-icon').forEach(link => link.replaceWith(link.cloneNode(true)));
 
-    // Re-select elements after cloning
+    // Add new event listeners
     document.querySelectorAll('.increaseBtn').forEach(btn => {
       btn.addEventListener('click', e => {
         const line = e.currentTarget.dataset.line;
@@ -213,40 +207,42 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Step 1: drawer open করা সাথে সাথে আগের content দেখানো
+    // Show drawer-loader ONLY on add to cart
+    if (drawerLoader) drawerLoader.classList.remove('hidden');
+
+    // Open drawer immediately with existing content
     window.openCartDrawer();
 
     const formData = new FormData(productForm);
 
-    // Step 2: AJAX request পাঠানো add to cart করার জন্য
     fetch('/cart/add.js', {
       method: 'POST',
       body: formData,
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest'
-      }
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
     })
-    .then(async res => {
-      if (!res.ok) {
-        let errorMessage = 'Add to cart failed.';
-        try {
-          const errorData = await res.json();
-          if (errorData && errorData.description) errorMessage = errorData.description;
-        } catch { }
-        throw new Error(errorMessage);
-      }
-      return res.json();
-    })
-    .then(data => {
-      console.log('Product added:', data);
-      // Step 3: Cart count update + drawer refresh
-      updateCartCount()
-        .then(() => refreshCartDrawer());
-    })
-    .catch(err => {
-      console.error('Add to cart error:', err);
-      alert(err.message || 'Failed to add product to cart.');
-    });
+      .then(async res => {
+        if (!res.ok) {
+          let errorMessage = 'Add to cart failed.';
+          try {
+            const errorData = await res.json();
+            if (errorData && errorData.description) errorMessage = errorData.description;
+          } catch { }
+          throw new Error(errorMessage);
+        }
+        return res.json();
+      })
+      .then(data => {
+        console.log('Product added:', data);
+        updateCartCount()
+          .then(() => refreshCartDrawer())
+          .finally(() => {
+            if (drawerLoader) drawerLoader.classList.add('hidden');
+          });
+      })
+      .catch(err => {
+        console.error('Add to cart error:', err);
+        alert(err.message || 'Failed to add product to cart.');
+        if (drawerLoader) drawerLoader.classList.add('hidden');
+      });
   });
-
 });
