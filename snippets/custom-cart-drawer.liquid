@@ -1,99 +1,161 @@
 <!-- Drawer -->
-<div
-  id="drawer"
-  class="fixed right-0 w-[390px] h-full bg-white shadow-lg transform translate-x-full transition-transform duration-300 ease-in-out z-50"
->
-  <div class="relative h-full">
-    <div id="drawer-loader" class="hidden absolute z-50 top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 size-10">
-      {{ 'loading-spinner.svg' | inline_asset_content }}
-    </div>
-    <div class="flex items-center justify-between px-5 py-3 border-b">
-      <h2 class="text-lg font-semibold text-gray-700 inline-flex gap-2">
-        Cart
-        <span class="cart-count size-[25px] flex items-center justify-center rounded-full bg-black text-white text-base">
-          {{- cart.item_count -}}
-        </span>
-      </h2>
-      <button
-        id="closeDrawerBtn"
-        aria-label="Close drawer"
-        class="text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded"
-      >
-        ✕
-      </button>
-    </div>
-    <div class="p-5">
-      <div id="cart-items-container">
-        {% for item in cart.items %}
-          <div
-            class="relative flex items-center gap-4 p-4 border-b border-gray-200"
-            data-line="{{ forloop.index }}"
-          >
-            <!-- 🖼 Product Image -->
-            <div class="w-32 flex-shrink-0">
-              <img
-                src="{{ item.image | img_url: 'master' }}"
-                width="100%"
-                height="auto"
-                alt="{{ item.title }}"
-                class="rounded"
-              >
-            </div>
-
-            <div class="flex flex-col justify-between flex-grow relative">
-              <div>
-                <h3 class="text-sm font-semibold text-gray-800">{{ item.title }}</h3>
-              </div>
-
-              <div class="flex items-center justify-between gap-2 bg-[#F8F8F8] max-w-[103px] w-full mt-2">
-                <button
-                  type="button"
-                  class="decreaseBtn text-2xl size-8 inline-block"
-                  data-line="{{ forloop.index }}"
-                >
-                  −
-                </button>
-                <input
-                  type="text"
-                  class="quantityInput text-base text-center w-9"
-                  data-line="{{ forloop.index }}"
-                  value="{{ item.quantity }}"
-                  min="1"
-                >
-                <button
-                  type="button"
-                  class="increaseBtn text-2xl size-8 inline-block"
-                  data-line="{{ forloop.index }}"
-                >
-                  +
-                </button>
-              </div>
-              <div class="absolute bottom-0 right-0 flex items-center gap-5">
-                {% if item.compare_at_price > item.price %}
-                  <h5 class="line-through !text-xl text-black !font-normal">{{ item.compare_at_price | money }}</h5>
-                  <h4 class="!text-3xl !font-semibold text-black">{{ item.price | money }}</h4>
-                {% else %}
-                  <h4 class="!text-3xl !font-semibold text-black">{{ item.price | money }}</h4>
-                {% endif %}
-              </div>
-            </div>
-
-            <a
-              href="#"
-              class="remove-icon absolute top-2 right-2 text-gray-500 hover:text-red-600"
+{% if cart != empty %}
+  <div
+    id="drawer"
+    class="fixed right-0 w-[390px] h-full bg-white shadow-lg transform translate-x-full transition-transform duration-300 ease-in-out z-50"
+  >
+    <div class="relative h-full">
+      <div id="drawer-loader" class="hidden absolute z-50 top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 size-10">
+        {{ 'loading-spinner.svg' | inline_asset_content }}
+      </div>
+      <div class="flex items-center justify-between px-5 py-3 border-b">
+        <h2 class="text-lg font-semibold text-gray-700 inline-flex gap-2">
+          Cart
+          <span class="cart-count size-[25px] flex items-center justify-center rounded-full bg-black text-white text-base">
+            {{- cart.item_count -}}
+          </span>
+        </h2>
+        <button
+          id="closeDrawerBtn"
+          aria-label="Close drawer"
+          class="text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded"
+        >
+          ✕
+        </button>
+      </div>
+      <div class="p-5">
+        <div id="cart-items-container">
+          {% for item in cart.items %}
+            <div
+              class="relative flex items-center gap-4 p-4 border-b border-gray-200"
               data-line="{{ forloop.index }}"
             >
-              {% render 'icons', icon: 'trash' %}
-            </a>
+              <!-- 🖼 Product Image -->
+              <div class="w-32 flex-shrink-0">
+                <img
+                  src="{{ item.image | img_url: 'master' }}"
+                  width="100%"
+                  height="auto"
+                  alt="{{ item.title }}"
+                  class="rounded"
+                >
+              </div>
 
-            <div class="item-loader hidden absolute top-2 right-10 w-6 h-6" data-line="{{ forloop.index }}">
-              {{ 'loading-spinner.svg' | inline_asset_content }}
+              <div class="flex flex-col justify-between flex-grow relative">
+                <div>
+                  <h3 class="text-sm font-semibold text-gray-800">{{ item.title }}</h3>
+                </div>
+
+                <div class="flex items-center justify-between gap-2 bg-[#F8F8F8] max-w-[103px] w-full mt-2">
+                  <button
+                    type="button"
+                    class="decreaseBtn text-2xl size-8 inline-block"
+                    data-line="{{ forloop.index }}"
+                  >
+                    −
+                  </button>
+                  <input
+                    type="text"
+                    class="quantityInput text-base text-center w-9"
+                    data-line="{{ forloop.index }}"
+                    value="{{ item.quantity }}"
+                    min="1"
+                  >
+                  <button
+                    type="button"
+                    class="increaseBtn text-2xl size-8 inline-block"
+                    data-line="{{ forloop.index }}"
+                  >
+                    +
+                  </button>
+                </div>
+                <div class="absolute bottom-0 right-0 flex items-center gap-5">
+                  {% if item.compare_at_price > item.price %}
+                    <h5 class="line-through !text-xl text-black !font-normal">{{ item.compare_at_price | money }}</h5>
+                    <h4 class="!text-3xl !font-semibold text-black">{{ item.price | money }}</h4>
+                  {% else %}
+                    <h4 class="!text-3xl !font-semibold text-black">{{ item.price | money }}</h4>
+                  {% endif %}
+                </div>
+              </div>
+
+              <a
+                href="#"
+                class="remove-icon absolute top-2 right-2 text-gray-500 hover:text-red-600"
+                data-line="{{ forloop.index }}"
+              >
+                {% render 'icons', icon: 'trash' %}
+              </a>
+
+              <div class="item-loader hidden absolute top-2 right-10 w-6 h-6" data-line="{{ forloop.index }}">
+                {{ 'loading-spinner.svg' | inline_asset_content }}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+{% else %}
+  <div class="text-xl text-black text-center">
+    <img src="{{ 'icon-cart-empty.svg' | asset_url }}" width="80px" height="auto" alt="Cart Icon"> <br>
+    Your cart is currently empty.
+  </div>
+{% endif %}
+
+<!-- UPSALE SLIDER START -->
+{% if cart != empty %}
+  <div class="cart-upsell-slider-wrapper mt-6">
+    <div class="cart-upsell-slider swiper-container relative mt-6">
+      <div class="swiper-wrapper">
+        {% assign products = settings.upsell_products %}
+        {% for product in products %}
+          <div class="swiper-slide">
+            <div class=" border p-3 rounded shadow-sm flex items-center justify-between">
+              <a href="{{ product.url }}" class="block mb-3">
+                <img
+                  src="{{ product.featured_image | image_url: 'medium' }}"
+                  alt="{{ product.title }}"
+                  width="100px"
+                  height="auto"
+                >
+              </a>
+
+              <div>
+                <a href="{{ product.url }}" class="block mb-3">
+                  <h3 class="mt-2 text-center font-semibold text-base">{{ product.title }}</h3>
+                </a>
+                <p class="text-center text-sm text-gray-600 mt-1">{{ product.price | money }}</p>
+              </div>
+
+              <div>
+                <button
+                  type="button"
+                  class="ajax-add-to-cart-button button cursor-pointer inline-block max-w-[130px] bg-blue-600 text-white !px-0 rounded hover:bg-blue-700 transition"
+                  aria-label="Add {{ product.title }} to cart"
+                  data-variant-id="{{ product.variants.first.id }}"
+                >
+                  Add to Cart
+                </button>
+              </div>
             </div>
           </div>
         {% endfor %}
       </div>
+
+      <div class="flex justify-between items-center">
+        <div class="swiper-button-next absolute !top-1/2 !-translate-y-1/2 right-0 !w-10 !h-10 bg-black cursor-pointer border border-white !text-white text-xl flex items-center justify-center">
+          &#8594
+        </div>
+        <div class="swiper-button-prev absolute !top-1/2 !-translate-y-1/2 left-0 !w-10 !h-10 bg-black cursor-pointer border border-white !text-white text-xl flex items-center justify-center">
+          &#8592
+        </div>
+      </div>
+      <div class="swiper-pagination"></div>
     </div>
   </div>
-</div>
+{% endif %}
+<!-- UPSALE SLIDER END -->
+
 <!-- Overlay -->
 <div id="overlay" class="fixed top-0 left-0 inset-0 bg-black bg-opacity-40 hidden z-40"></div>

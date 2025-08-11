@@ -1449,6 +1449,11 @@
         "id": "cart_color_scheme",
         "label": "t:sections.all.colors.label",
         "default": "scheme-1"
+      },
+      {
+        "type": "product_list",
+        "id": "upsell_products",
+        "label": "Select Upsell Products"
       }
     ]
   }
