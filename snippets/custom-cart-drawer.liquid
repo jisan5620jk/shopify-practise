@@ -1,9 +1,9 @@
 <!-- Drawer -->
-{% if cart != empty %}
-  <div
-    id="drawer"
-    class="fixed right-0 w-[390px] h-full bg-white shadow-lg transform translate-x-full transition-transform duration-300 ease-in-out z-50"
-  >
+<div
+  id="drawer"
+  class="fixed right-0 w-[390px] h-full bg-white shadow-lg transform translate-x-full transition-transform duration-300 ease-in-out z-50"
+>
+  {% if cart != empty %}
     <div class="relative h-full">
       <div id="drawer-loader" class="hidden absolute z-50 top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 size-10">
         {{ 'loading-spinner.svg' | inline_asset_content }}
@@ -95,67 +95,66 @@
         </div>
       </div>
     </div>
-  </div>
-{% else %}
-  <div class="text-xl text-black text-center">
-    <img src="{{ 'icon-cart-empty.svg' | asset_url }}" width="80px" height="auto" alt="Cart Icon"> <br>
-    Your cart is currently empty.
-  </div>
-{% endif %}
-
-<!-- UPSALE SLIDER START -->
-{% if cart != empty %}
-  <div class="cart-upsell-slider-wrapper mt-6">
-    <div class="cart-upsell-slider swiper-container relative mt-6">
-      <div class="swiper-wrapper">
-        {% assign products = settings.upsell_products %}
-        {% for product in products %}
-          <div class="swiper-slide">
-            <div class=" border p-3 rounded shadow-sm flex items-center justify-between">
-              <a href="{{ product.url }}" class="block mb-3">
-                <img
-                  src="{{ product.featured_image | image_url: 'medium' }}"
-                  alt="{{ product.title }}"
-                  width="100px"
-                  height="auto"
-                >
-              </a>
-
-              <div>
+  {% else %}
+    <div class="text-xl text-black text-center">
+      <img src="{{ 'icon-cart-empty.svg' | asset_url }}" width="80px" height="auto" alt="Cart Icon"> <br>
+      Your cart is currently empty.
+    </div>
+  {% endif %}
+  <!-- UPSALE SLIDER START -->
+  {% if cart != empty %}
+    <div class="cart-upsell-slider-wrapper mt-6">
+      <div class="cart-upsell-slider swiper-container relative mt-6">
+        <div class="swiper-wrapper">
+          {% assign products = settings.upsell_products %}
+          {% for product in products %}
+            <div class="swiper-slide">
+              <div class=" border p-3 rounded shadow-sm flex items-center justify-between">
                 <a href="{{ product.url }}" class="block mb-3">
-                  <h3 class="mt-2 text-center font-semibold text-base">{{ product.title }}</h3>
+                  <img
+                    src="{{ product.featured_image | image_url: 'medium' }}"
+                    alt="{{ product.title }}"
+                    width="100px"
+                    height="auto"
+                  >
                 </a>
-                <p class="text-center text-sm text-gray-600 mt-1">{{ product.price | money }}</p>
-              </div>
 
-              <div>
-                <button
-                  type="button"
-                  class="ajax-add-to-cart-button button cursor-pointer inline-block max-w-[130px] bg-blue-600 text-white !px-0 rounded hover:bg-blue-700 transition"
-                  aria-label="Add {{ product.title }} to cart"
-                  data-variant-id="{{ product.variants.first.id }}"
-                >
-                  Add to Cart
-                </button>
+                <div>
+                  <a href="{{ product.url }}" class="block mb-3">
+                    <h3 class="mt-2 text-center font-semibold text-base">{{ product.title }}</h3>
+                  </a>
+                  <p class="text-center text-sm text-gray-600 mt-1">{{ product.price | money }}</p>
+                </div>
+
+                <div>
+                  <button
+                    type="button"
+                    class="ajax-add-to-cart-button button cursor-pointer inline-block max-w-[130px] bg-blue-600 text-white !px-0 rounded hover:bg-blue-700 transition"
+                    aria-label="Add {{ product.title }} to cart"
+                    data-variant-id="{{ product.variants.first.id }}"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        {% endfor %}
-      </div>
+          {% endfor %}
+        </div>
 
-      <div class="flex justify-between items-center">
-        <div class="swiper-button-next absolute !top-1/2 !-translate-y-1/2 right-0 !w-10 !h-10 bg-black cursor-pointer border border-white !text-white text-xl flex items-center justify-center">
-          &#8594
+        <div class="flex justify-between items-center">
+          <div class="swiper-button-next absolute !top-1/2 !-translate-y-1/2 right-0 !w-10 !h-10 bg-black cursor-pointer border border-white !text-white text-xl flex items-center justify-center">
+            &#8594
+          </div>
+          <div class="swiper-button-prev absolute !top-1/2 !-translate-y-1/2 left-0 !w-10 !h-10 bg-black cursor-pointer border border-white !text-white text-xl flex items-center justify-center">
+            &#8592
+          </div>
         </div>
-        <div class="swiper-button-prev absolute !top-1/2 !-translate-y-1/2 left-0 !w-10 !h-10 bg-black cursor-pointer border border-white !text-white text-xl flex items-center justify-center">
-          &#8592
-        </div>
+        <div class="swiper-pagination"></div>
       </div>
-      <div class="swiper-pagination"></div>
     </div>
-  </div>
-{% endif %}
-<!-- UPSALE SLIDER END -->
+  {% endif %}
+  <!-- UPSALE SLIDER END -->
+</div>
 
 <!-- Overlay -->
 <div id="overlay" class="fixed top-0 left-0 inset-0 bg-black bg-opacity-40 hidden z-40"></div>
