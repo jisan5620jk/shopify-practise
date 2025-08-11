@@ -29,12 +29,15 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Drawer open triggers (যেকোনো বাটনে data-cart-type="drawer" থাকলে)
-  document.querySelectorAll('[data-cart-type="drawer"]').forEach(btn => {
-    btn.addEventListener('click', e => {
-      e.preventDefault();
+  document.querySelectorAll('[data-cart-type="drawer"]').forEach(el => {
+    el.addEventListener('click', e => {
+      if (el.tagName.toLowerCase() === 'a') {
+        e.preventDefault();
+      }
       window.openCartDrawer();
     });
   });
+
 
   // --- Loader helper ---
   const showLoader = (line) => {
