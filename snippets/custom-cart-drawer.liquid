@@ -20,18 +20,16 @@
   </div>
   <div class="p-5">
     {% for item in cart.items %}
-      <div class="border-b border-black/10 last:border-b-none flex items-center gap-8" data-line="{{ forloop.index }}">
-        <div class="w-32">
-          <img src="{{ item.image | img_url: 'master' }}" width="100%" height="auto" alt="{{ item.title }}">
+      <div class="cart-item" data-line="{{ forloop.index }}">
+        <div>
+          <img src="{{ item.image | img_url: 'master' }}" alt="{{ item.title }}">
         </div>
         <div>
           <h3>{{ item.title }}</h3>
-
           <div class="product-quantity">
             <button type="button" class="decreaseBtn" data-line="{{ forloop.index }}">-</button>
             <input
               type="text"
-              name="quantity"
               class="quantityInput"
               data-line="{{ forloop.index }}"
               value="{{ item.quantity }}"
@@ -39,11 +37,9 @@
             >
             <button type="button" class="increaseBtn" data-line="{{ forloop.index }}">+</button>
           </div>
-
           <a href="#" class="remove-icon" data-line="{{ forloop.index }}">
             {% render 'icons', icon: 'trash' %}
           </a>
-
           <div class="item-loader hidden" data-line="{{ forloop.index }}">
             {{ 'loading-spinner.svg' | inline_asset_content }}
           </div>
