@@ -1,41 +1,39 @@
 <!-- Drawer -->
-<div class="p-5">
-  <div
-    id="drawer"
-    class="fixed inset-y-0 right-0 w-[390px] bg-white shadow-lg transform translate-x-full transition-transform duration-300 ease-in-out z-30"
-  >
-    <div class="flex items-center justify-between px-4 py-3 border-b">
-      <h2 class="text-lg font-semibold text-gray-700 inline-flex gap-2">
-        Cart
-        <span class="cart-count size-[25px] flex items-center justify-center rounded-full bg-black text-white text-base">
-          {{- cart.item_count -}}
-        </span>
-      </h2>
-      <button
-        id="closeDrawerBtn"
-        aria-label="Close drawer"
-        class="text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded"
-      >
-        ✕
-      </button>
-    </div>
-    <div class="p-4">
-      {% for item in cart.items %}
-        <div class="border-b border-black/10 last:border-b-none flex items-center gap-8">
-          <div class="w-32">
-            <img src="{{ item.image | img_url: 'master' }}" width="100%" height="auto">
-          </div>
-          <div>
-            <h3>{{ item.title }}</h3>
-            <div class="product-quantity">
-              <button type="button" id="decreaseBtn">-</button>
-              <input type="text" name="quantity" id="quantity" value="1" min="1">
-              <button type="button" id="increaseBtn">+</button>
-            </div>
+<div
+  id="drawer"
+  class="fixed inset-y-0 right-0 w-[390px] bg-white shadow-lg transform translate-x-full transition-transform duration-300 ease-in-out z-30"
+>
+  <div class="flex items-center justify-between px-5 py-3 border-b">
+    <h2 class="text-lg font-semibold text-gray-700 inline-flex gap-2">
+      Cart
+      <span class="cart-count size-[25px] flex items-center justify-center rounded-full bg-black text-white text-base">
+        {{- cart.item_count -}}
+      </span>
+    </h2>
+    <button
+      id="closeDrawerBtn"
+      aria-label="Close drawer"
+      class="text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded"
+    >
+      ✕
+    </button>
+  </div>
+  <div class="p-5">
+    {% for item in cart.items %}
+      <div class="border-b border-black/10 last:border-b-none flex items-center gap-8">
+        <div class="w-32">
+          <img src="{{ item.image | img_url: 'master' }}" width="100%" height="auto">
+        </div>
+        <div>
+          <h3>{{ item.title }}</h3>
+          <div class="product-quantity">
+            <button type="button" id="decreaseBtn">-</button>
+            <input type="text" name="quantity" id="quantity" value="1" min="1">
+            <button type="button" id="increaseBtn">+</button>
           </div>
         </div>
-      {% endfor %}
-    </div>
+      </div>
+    {% endfor %}
   </div>
 </div>
 <!-- Overlay -->
