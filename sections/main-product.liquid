@@ -215,7 +215,7 @@
     {%- endif -%}
   </div>
   <div class="product-content">
-    {%- form 'product', product, class: 'ajax-product-form' -%}
+    {%- form 'product', product class: 'ajax-product-form' -%}
       <!-- ✅ Hidden input for this option -->
       <input
         type="hidden"
@@ -379,7 +379,6 @@
     const hiddenInput = document.getElementById('selected-variant-id');
     const cartBtnWrapper = document.querySelector('.product-cart-btn');
     const cartBtn = cartBtnWrapper?.querySelector('button');
-    const form = document.querySelector('.ajax-product-form'); // ✅ তোমার form এ id দিতে হবে
 
     // ইউজারের সিলেক্টেড অপশনগুলো রিটার্ন করে (array)
     function getSelectedOptions() {
@@ -403,85 +402,81 @@
         hiddenInput.value = matchedVariant.id;
 
         const event = new CustomEvent('variant:updated', {
-          detail: { variant: matchedVariant },
+          detail: {
+            variant: matchedVariant,
+          },
         });
         document.dispatchEvent(event);
       }
     }
 
-    // প্রতিটি radio input এ change ইভেন্ট
+    // ইউজার অপশন চেঞ্জ করলে update হবে
+    function onOptionChange() {
+      updateSelectedVariantId();
+    }
+
+    // প্রতিটি radio input এ change ইভেন্ট লিসেনার বসানো
     fieldsets.forEach((fieldset) => {
       const radios = fieldset.querySelectorAll('input[type="radio"]');
       radios.forEach((radio) => {
-        radio.addEventListener('change', updateSelectedVariantId);
+        radio.addEventListener('change', onOptionChange);
       });
     });
 
-    // প্রথমবার load এ variant ID সেট
+    // প্রথমবার load এর সময় variant ID সেট করা
     updateSelectedVariantId();
 
-    // variant update হলে Add to Cart button নিয়ন্ত্রণ
+    // variant update হলে Add to Cart নিয়ন্ত্রণ
     document.addEventListener('variant:updated', function (e) {
       const variant = e.detail.variant;
 
       if (variant && !variant.available) {
+        // যদি ভ্যারিয়েন্ট unavailable হয়
         cartBtn.setAttribute('disabled', 'disabled');
         cartBtn.textContent = 'Sold Out';
         cartBtn.classList.add('opacity-50', 'cursor-not-allowed');
       } else {
+        // যদি ভ্যারিয়েন্ট available হয়
         cartBtn.removeAttribute('disabled');
         cartBtn.textContent = 'Add To Cart';
         cartBtn.classList.remove('opacity-50', 'cursor-not-allowed');
       }
     });
+  });
 
-    // ✅ AJAX Add to Cart (Reload ছাড়া)
-    form?.addEventListener('submit', function (e) {
-      e.preventDefault();
+  // variant price update
+  document.addEventListener('variant:updated', function (event) {
+    const variant = event.detail.variant;
+    if (!variant) return;
 
-      const formData = new FormData(form);
+    // ✅ Update the URL without page reload
+    const url = new URL(window.location.href);
+    url.searchParams.set('variant', variant.id);
+    window.history.replaceState({}, '', url);
 
-      fetch('/cart/add.js', {
-        method: 'POST',
-        body: formData,
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          console.log('✅ Added to cart:', data);
-          alert(`Added "${data.title}" to cart!`);
-          // এখানে cart drawer update কোড বসানো যাবে
-        })
-        .catch((err) => console.error('❌ Error adding to cart:', err));
-    });
+    // ✅ Select elements
+    const priceEl = document.querySelector('.product-discount-price');
+    const comparePriceEl = document.querySelector('.product-main-price');
 
-    // ✅ Variant Price Update
-    document.addEventListener('variant:updated', function (event) {
-      const variant = event.detail.variant;
-      if (!variant) return;
+    if (!priceEl || !comparePriceEl) return;
 
-      const url = new URL(window.location.href);
-      url.searchParams.set('variant', variant.id);
-      window.history.replaceState({}, '', url);
+    // ✅ Convert cents to currency string manually (without formatMoney)
+    const price = (variant.price / 100).toFixed(2);
+    const compareAtPrice = variant.compare_at_price ? (variant.compare_at_price / 100).toFixed(2) : null;
 
-      const priceEl = document.querySelector('.product-discount-price');
-      const comparePriceEl = document.querySelector('.product-main-price');
+    // ✅ Update price in DOM
+    priceEl.textContent = price;
 
-      if (!priceEl || !comparePriceEl) return;
+    if (compareAtPrice && variant.compare_at_price > variant.price) {
+      comparePriceEl.textContent = compareAtPrice;
+      comparePriceEl.style.display = 'inline-block';
+    } else {
+      comparePriceEl.style.display = 'none';
+    }
+  });
 
-      const price = (variant.price / 100).toFixed(2);
-      const compareAtPrice = variant.compare_at_price ? (variant.compare_at_price / 100).toFixed(2) : null;
-
-      priceEl.textContent = price;
-
-      if (compareAtPrice && variant.compare_at_price > variant.price) {
-        comparePriceEl.textContent = compareAtPrice;
-        comparePriceEl.style.display = 'inline-block';
-      } else {
-        comparePriceEl.style.display = 'none';
-      }
-    });
-
-    // ✅ Thumbnail Click Change
+  // Tumbnail tab
+  document.addEventListener('DOMContentLoaded', () => {
     const thumbnails = document.querySelectorAll('.thumbnail');
     const currentImage = document.getElementById('currentImage');
 
@@ -495,11 +490,12 @@
       });
     });
 
-    // ✅ Variant Thumbnail Change
     document.addEventListener('variant:updated', function (e) {
       const variant = e.detail.variant;
+
+      // যদি variant এর সাথে featured_media থাকে
       if (variant.featured_media && variant.featured_media.id) {
-        const mediaId = variant.featured_media.id.toString();
+        const mediaId = variant.featured_media.id.toString(); // ensure string
         const matchedThumbnail = Array.from(thumbnails).find((thumbnail) => {
           return thumbnail.getAttribute('media-id') === mediaId;
         });
@@ -513,36 +509,70 @@
         }
       }
     });
+  });
 
-    // ✅ Quantity Increase/Decrease
+  // Quantity
+  document.addEventListener('DOMContentLoaded', () => {
     const increaseBtn = document.getElementById('increaseBtn');
     const decreaseBtn = document.getElementById('decreaseBtn');
     const quantityInput = document.getElementById('quantity');
 
-    increaseBtn?.addEventListener('click', () => {
+    increaseBtn.addEventListener('click', () => {
       let currentValue = parseInt(quantityInput.value) || 1;
       quantityInput.value = currentValue + 1;
     });
 
-    decreaseBtn?.addEventListener('click', () => {
+    decreaseBtn.addEventListener('click', () => {
       let currentValue = parseInt(quantityInput.value) || 1;
       if (currentValue > 1) {
         quantityInput.value = currentValue - 1;
       }
     });
+  });
 
-    // ✅ Active Class for Custom Variant List
+  // variant active
+  document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.product-variants .sizes').forEach((group) => {
       const items = group.querySelectorAll('li');
       const hiddenInput = group.querySelector('input[type="hidden"]');
 
       items.forEach((item) => {
         item.addEventListener('click', () => {
+          // Remove active from all items
           items.forEach((i) => i.classList.remove('active'));
+
+          // Add active to clicked item
           item.classList.add('active');
+
+          // Update hidden input with selected value
           hiddenInput.value = item.dataset.value;
         });
       });
+    });
+  });
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const form = document.querySelector('.ajax-product-form');
+
+    form?.addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      const formData = new FormData(form);
+
+      fetch('/cart/add.js', {
+        method: 'POST',
+        body: formData,
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          console.log('✅ Added to cart:', data);
+
+          // এখানে আগের drawer open ফাংশন কল করবো
+          if (typeof openDrawer === 'function') {
+            openDrawer();
+          }
+        })
+        .catch((err) => console.error('❌ Error adding to cart:', err));
     });
   });
 </script>
