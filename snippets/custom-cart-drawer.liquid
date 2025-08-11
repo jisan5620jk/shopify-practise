@@ -69,8 +69,8 @@
                 </button>
               </div>
               <div class="absolute bottom-0 right-0 flex items-center gap-5">
-                <h5 class="line-through text-base">{{ item.compare_at_price | escape }}</h5>
-                <h4 class="line-through text-xl">{{ item.price | escape }}</h4>
+                <h5 class="line-through text-base">{{ item.compare_at_price | money }}</h5>
+                <h4 class="line-through text-xl">{{ item.price | money }}</h4>
               </div>
             </div>
 
