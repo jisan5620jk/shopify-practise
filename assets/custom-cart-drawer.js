@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   const drawer = document.getElementById('drawer');
   const overlay = document.getElementById('overlay');
-  const openBtn = document.querySelectorAll('[data-cart-type="drawer"]')
+  const openBtn = document.querySelector('[data-cart-type="drawer"]')
   const closeBtn = document.getElementById('closeDrawerBtn');
 
   const openDrawer = () => {
