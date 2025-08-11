@@ -552,27 +552,29 @@
   });
 
   document.addEventListener('DOMContentLoaded', function () {
-    const form = document.querySelector('.ajax-product-form');
+    const ajaxForm = document.getElementById('ajax-product-form');
 
-    form?.addEventListener('submit', function (e) {
-      e.preventDefault();
+    if (ajaxForm) {
+      ajaxForm.addEventListener('submit', function (e) {
+        e.preventDefault(); // normal form submit বন্ধ
 
-      const formData = new FormData(form);
+        const formData = new FormData(this);
 
-      fetch('/cart/add.js', {
-        method: 'POST',
-        body: formData,
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          console.log('✅ Added to cart:', data);
-
-          // এখানে আগের drawer open ফাংশন কল করবো
-          if (typeof openDrawer === 'function') {
-            openDrawer();
-          }
+        fetch('/cart/add.js', {
+          method: 'POST',
+          body: formData,
         })
-        .catch((err) => console.error('❌ Error adding to cart:', err));
-    });
+          .then((res) => res.json())
+          .then((data) => {
+            console.log('Added to cart:', data);
+
+            // এখানে Drawer ওপেন ফাংশন কল করো
+            if (typeof openCartDrawer === 'function') {
+              openCartDrawer();
+            }
+          })
+          .catch((err) => console.error(err));
+      });
+    }
   });
 </script>
