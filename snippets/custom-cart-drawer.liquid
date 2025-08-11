@@ -1,9 +1,9 @@
 <!-- Drawer -->
 <div
   id="drawer"
-  class="fixed inset-y-0 right-0 w-[390px] bg-white shadow-lg transform translate-x-full transition-transform duration-300 ease-in-out z-30"
+  class="fixed right-0 w-[390px] bg-white shadow-lg transform translate-x-full transition-transform duration-300 ease-in-out z-50"
 >
-  <div class="relative">
+  <div class="relative h-full">
     <div id="drawer-loader" class="hidden absolute z-50 top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 size-10">
       {{ 'loading-spinner.svg' | inline_asset_content }}
     </div>
@@ -55,4 +55,4 @@
   </div>
 </div>
 <!-- Overlay -->
-<div id="overlay" class="fixed inset-0 bg-black bg-opacity-30 hidden z-20"></div>
+<div id="overlay" class="fixed top-0 left-0 inset-0 bg-black bg-opacity-40 hidden z-40"></div>
