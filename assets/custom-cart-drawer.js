@@ -1,56 +1,49 @@
 document.addEventListener('DOMContentLoaded', () => {
+  // --- Drawer elements ---
   const drawer = document.getElementById('drawer');
   const overlay = document.getElementById('overlay');
   const closeBtn = document.getElementById('closeDrawerBtn');
 
-  // 🔹 গ্লোবাল স্কোপে ফাংশন রাখছি
-  window.openDrawer = function () {
+  // Drawer open function - globally accessible
+  window.openCartDrawer = function () {
     drawer.classList.remove('translate-x-full');
     drawer.classList.add('translate-x-0');
     overlay.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
   };
 
-  window.closeDrawer = function () {
+  // Drawer close function - globally accessible
+  window.closeCartDrawer = function () {
     drawer.classList.add('translate-x-full');
     drawer.classList.remove('translate-x-0');
     overlay.classList.add('hidden');
     document.body.style.overflow = '';
   };
 
-  // ✅ Drawer trigger button গুলো হ্যান্ডেল করা
-  document.querySelectorAll('[data-cart-type="drawer"]').forEach(openBtn => {
-    openBtn.addEventListener('click', (e) => {
-      // এখানে preventDefault কেবল লিঙ্ক বা non-form বাটনের জন্য
-      if (openBtn.tagName.toLowerCase() === 'a') {
-        e.preventDefault();
-      }
-      window.openDrawer();
+  // Drawer close event listeners
+  closeBtn.addEventListener('click', window.closeCartDrawer);
+  overlay.addEventListener('click', window.closeCartDrawer);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') window.closeCartDrawer();
+  });
+
+  // Drawer open triggers (যেকোনো বাটনে data-cart-type="drawer" থাকলে)
+  document.querySelectorAll('[data-cart-type="drawer"]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.preventDefault();
+      window.openCartDrawer();
     });
   });
 
-  // ❌ Close events
-  closeBtn?.addEventListener('click', window.closeDrawer);
-  overlay?.addEventListener('click', window.closeDrawer);
-
-  // Esc চাপলে বন্ধ
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') window.closeDrawer();
-  });
-});
-
-
-document.addEventListener('DOMContentLoaded', () => {
-  // Loader দেখানোর/লুকানোর হেল্পার
+  // --- Loader helper ---
   const showLoader = (line) => {
     document.querySelector(`.item-loader[data-line="${line}"]`)?.classList.remove('hidden');
   };
-
   const hideLoader = (line) => {
     document.querySelector(`.item-loader[data-line="${line}"]`)?.classList.add('hidden');
   };
 
-  // কার্ট কাউন্ট আপডেট ফাংশন
+  // --- Update cart count in all counters ---
   const updateCartCount = () => {
     return fetch('/cart.js', {
       headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -63,16 +56,32 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   };
 
-  // কার্ট আইটেম রিমুভ AJAX
+  // --- Update cart item quantity ---
+  const updateCartQuantity = (line, quantity) => {
+    if (quantity < 1) return;
+    showLoader(line);
+    return fetch('/cart/change.js', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+      body: JSON.stringify({ line: parseInt(line), quantity })
+    })
+    .then(res => res.json())
+    .then(cart => {
+      hideLoader(line);
+      updateCartCount();
+    })
+    .catch(err => {
+      hideLoader(line);
+      console.error('Cart update failed:', err);
+    });
+  };
+
+  // --- Remove cart item ---
   const removeCartItem = (line) => {
     showLoader(line);
-
     fetch('/cart/change.js', {
       method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json', 
-        'X-Requested-With': 'XMLHttpRequest' 
-      },
+      headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
       body: JSON.stringify({ line: parseInt(line), quantity: 0 })
     })
     .then(res => res.json())
@@ -80,16 +89,14 @@ document.addEventListener('DOMContentLoaded', () => {
       hideLoader(line);
       updateCartCount();
 
-      // DOM থেকে item সরানো
+      // DOM থেকে আইটেম সরানো
       const itemEl = document.querySelector(`.cart-item[data-line="${line}"]`);
       if (itemEl) itemEl.remove();
 
-      // কার্ট খালি হলে মেসেজ দেখানো
+      // যদি কার্ট খালি হয়, খালি মেসেজ দেখানো
       if (cart.items.length === 0) {
-        const cartContainer = document.querySelector('#cart-items-container');
-        if (cartContainer) {
-          cartContainer.innerHTML = '<p>Your cart is empty.</p>';
-        }
+        const container = document.querySelector('#cart-items-container');
+        if (container) container.innerHTML = '<p>Your cart is empty.</p>';
       }
     })
     .catch(err => {
@@ -98,7 +105,44 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   };
 
-  // Remove আইকন ক্লিক ইভেন্ট
+  // --- Increase quantity button ---
+  document.querySelectorAll('.increaseBtn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      const line = e.currentTarget.dataset.line;
+      const input = document.querySelector(`.quantityInput[data-line="${line}"]`);
+      let qty = parseInt(input.value) || 1;
+      qty++;
+      input.value = qty;
+      updateCartQuantity(line, qty);
+    });
+  });
+
+  // --- Decrease quantity button ---
+  document.querySelectorAll('.decreaseBtn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      const line = e.currentTarget.dataset.line;
+      const input = document.querySelector(`.quantityInput[data-line="${line}"]`);
+      let qty = parseInt(input.value) || 1;
+      if (qty > 1) qty--;
+      input.value = qty;
+      updateCartQuantity(line, qty);
+    });
+  });
+
+  // --- Quantity input manual change (debounce 500ms) ---
+  document.querySelectorAll('.quantityInput').forEach(input => {
+    let timeout;
+    input.addEventListener('input', e => {
+      clearTimeout(timeout);
+      const line = e.currentTarget.dataset.line;
+      const val = parseInt(e.currentTarget.value);
+      timeout = setTimeout(() => {
+        if (val >= 1) updateCartQuantity(line, val);
+      }, 500);
+    });
+  });
+
+  // --- Remove icon click ---
   document.querySelectorAll('.remove-icon').forEach(link => {
     link.addEventListener('click', e => {
       e.preventDefault();
@@ -107,5 +151,35 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // --- অন্য প্রয়োজনীয় ফাংশন যেমন কার্ট quantity update ইত্যাদি যদি দরকার --- //
+  // --- AJAX Product Add to Cart Form ---
+  const productForm = document.querySelector('.ajax-product-form');
+  if (productForm) {
+    productForm.addEventListener('submit', e => {
+      e.preventDefault();
+      addToCartAjax(new FormData(productForm));
+    });
+  }
+
+  function addToCartAjax(formData) {
+    fetch('/cart/add.js', {
+      method: 'POST',
+      body: formData,
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(res => {
+      if (!res.ok) throw new Error('Add to cart failed');
+      return res.json();
+    })
+    .then(data => {
+      console.log('✅ Product added:', data);
+      return updateCartCount();
+    })
+    .then(() => {
+      window.openCartDrawer();  // ড্রয়ার ওপেন করবে
+    })
+    .catch(err => {
+      console.error('❌ Error adding to cart:', err);
+      // চাইলে ইউজারকে জানাও (alert/modal)
+    });
+  }
 });
