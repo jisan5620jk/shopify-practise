@@ -215,7 +215,7 @@
     {%- endif -%}
   </div>
   <div class="product-content">
-    {%- form 'product', product -%}
+    {%- form 'product', product, class: 'ajax-product-form' -%}
       <!-- ✅ Hidden input for this option -->
       <input
         type="hidden"
@@ -379,7 +379,7 @@
     const hiddenInput = document.getElementById('selected-variant-id');
     const cartBtnWrapper = document.querySelector('.product-cart-btn');
     const cartBtn = cartBtnWrapper?.querySelector('button');
-    const form = document.getElementById('ajax-product-form'); // ✅ তোমার form এ id দিতে হবে
+    const form = document.querySelector('.ajax-product-form'); // ✅ তোমার form এ id দিতে হবে
 
     // ইউজারের সিলেক্টেড অপশনগুলো রিটার্ন করে (array)
     function getSelectedOptions() {
