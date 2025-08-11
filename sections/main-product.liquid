@@ -551,30 +551,26 @@
     });
   });
 
-  document.addEventListener('DOMContentLoaded', function () {
-    const ajaxForm = document.querySelector('ajax-product-form');
+  document.querySelector('.ajax-product-form').addEventListener('submit', function (e) {
+    e.preventDefault();
 
-    if (ajaxForm) {
-      ajaxForm.addEventListener('submit', function (e) {
-        e.preventDefault(); // normal form submit বন্ধ
+    // 1. AJAX দিয়ে কার্টে পণ্য যোগ
+    addToCartAjax(new FormData(this));
 
-        const formData = new FormData(this);
-
-        fetch('/cart/add.js', {
-          method: 'POST',
-          body: formData,
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            console.log('Added to cart:', data);
-
-            // এখানে Drawer ওপেন ফাংশন কল করো
-            if (typeof openCartDrawer === 'function') {
-              openCartDrawer();
-            }
-          })
-          .catch((err) => console.error(err));
-      });
-    }
+    // 2. Drawer ওপেন
+    openCartDrawer();
   });
+
+  function addToCartAjax(formData) {
+    fetch('/cart/add.js', {
+      method: 'POST',
+      body: formData,
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        console.log('Added to cart:', data);
+        // Drawer refresh code
+        refreshCartDrawer();
+      });
+  }
 </script>
