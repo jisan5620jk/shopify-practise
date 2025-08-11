@@ -64,13 +64,19 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // Refresh cart drawer HTML content by fetching from server
+  const drawerLoader = document.getElementById('drawer-loader');
+
   const refreshCartDrawer = () => {
+    if (drawerLoader) drawerLoader.classList.remove('hidden');  // loader দেখাও
+
     return fetch('/cart?view=drawer')
       .then(res => {
         if (!res.ok) throw new Error('Failed to fetch cart drawer HTML');
         return res.text();
       })
       .then(html => {
+        if (drawerLoader) drawerLoader.classList.add('hidden'); // loader লুকাও
+
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
         const newCartContent = doc.querySelector('#cart-items-container');
@@ -82,9 +88,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       })
       .catch(err => {
+        if (drawerLoader) drawerLoader.classList.add('hidden'); // error হলেও লুকাও
         console.error('Error refreshing cart drawer:', err);
       });
   };
+
 
   // Update cart quantity
   const updateCartQuantity = (line, quantity) => {
