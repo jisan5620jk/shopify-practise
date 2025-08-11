@@ -161,6 +161,31 @@
     </div>
   {% endif %}
   <!-- UPSALE SLIDER END -->
+
+  <!-- DRAWER FOOTER START -->
+  <div class="drawer-footer px-5 py-4 border-t border-gray-200 bg-white">
+    <div class="flex items-center justify-between mb-4">
+      <span class="text-lg font-medium text-gray-700">Subtotal</span>
+      <span class="text-xl font-semibold text-black">{{ cart.total_price | money }}</span>
+    </div>
+
+    <div class="flex flex-col gap-3">
+      <a
+        href="/checkout"
+        class="block w-full text-center bg-black text-white py-3 rounded hover:bg-gray-800 transition"
+      >
+        Proceed to Checkout
+      </a>
+
+      <a
+        href="{{ routes.cart_url }}"
+        class="block w-full text-center text-sm text-gray-600 hover:text-black transition"
+      >
+        View Full Cart
+      </a>
+    </div>
+  </div>
+  <!-- DRAWER FOOTER END -->
 </div>
 
 <!-- Overlay -->
