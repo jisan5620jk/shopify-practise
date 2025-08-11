@@ -40,21 +40,109 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-  // Quantity
-  document.addEventListener('DOMContentLoaded', () => {
-    const increaseBtn = document.getElementById('increaseBtn');
-    const decreaseBtn = document.getElementById('decreaseBtn');
-    const quantityInput = document.getElementById('quantity');
+document.addEventListener('DOMContentLoaded', () => {
+  // Helpers
+  const showLoader = (line) => {
+    document.querySelector(`.item-loader[data-line="${line}"]`)?.classList.remove('hidden');
+  };
 
-    increaseBtn.addEventListener('click', () => {
-      let currentValue = parseInt(quantityInput.value) || 1;
-      quantityInput.value = currentValue + 1;
+  const hideLoader = (line) => {
+    document.querySelector(`.item-loader[data-line="${line}"]`)?.classList.add('hidden');
+  };
+
+  // Ajax কার্ট update ফাংশন
+  const updateCartQuantity = (line, quantity) => {
+    if (quantity < 1) return; // min 1
+
+    showLoader(line);
+
+    fetch('/cart/change.js', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+      body: JSON.stringify({ line: line, quantity: quantity })
+    })
+      .then(res => res.json())
+      .then(cart => {
+        hideLoader(line);
+        // এখানে তুমি চাইলে পুরো cart রিফ্রেশ বা count আপডেট করতে পারো
+        console.log('Cart updated:', cart);
+      })
+      .catch(err => {
+        hideLoader(line);
+        console.error('Cart update failed:', err);
+      });
+  };
+
+  // Ajax কার্ট আইটেম রিমুভ ফাংশন (quantity = 0)
+  const removeCartItem = (line) => {
+    showLoader(line);
+
+    fetch('/cart/change.js', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+      body: JSON.stringify({ line: line, quantity: 0 })
+    })
+      .then(res => res.json())
+      .then(cart => {
+        hideLoader(line);
+        // এখানে চাইলে cart রিফ্রেশ বা ডম আপডেট করো
+        console.log('Item removed:', cart);
+        // Optional: page refresh or remove DOM element
+        location.reload(); // অথবা চাইলে ডম ম্যানিপুলেশন করতে পারো
+      })
+      .catch(err => {
+        hideLoader(line);
+        console.error('Remove item failed:', err);
+      });
+  };
+
+  // Increase button ক্লিক
+  document.querySelectorAll('.increaseBtn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const line = e.currentTarget.dataset.line;
+      const input = document.querySelector(`.quantityInput[data-line="${line}"]`);
+      let qty = parseInt(input.value) || 1;
+      qty++;
+      input.value = qty;
+      updateCartQuantity(line, qty);
     });
+  });
 
-    decreaseBtn.addEventListener('click', () => {
-      let currentValue = parseInt(quantityInput.value) || 1;
-      if (currentValue > 1) {
-        quantityInput.value = currentValue - 1;
+  // Decrease button ক্লিক
+  document.querySelectorAll('.decreaseBtn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const line = e.currentTarget.dataset.line;
+      const input = document.querySelector(`.quantityInput[data-line="${line}"]`);
+      let qty = parseInt(input.value) || 1;
+      if (qty > 1) qty--;
+      input.value = qty;
+      updateCartQuantity(line, qty);
+    });
+  });
+
+  // Quantity ইনপুটে ম্যানুয়াল চেঞ্জ হলে debounce দিয়ে আপডেট (ঐচ্ছিক)
+  document.querySelectorAll('.quantityInput').forEach(input => {
+    let timeout;
+    input.addEventListener('input', (e) => {
+      clearTimeout(timeout);
+      const line = e.currentTarget.dataset.line;
+      const val = parseInt(e.currentTarget.value);
+      timeout = setTimeout(() => {
+        if (val >= 1) {
+          updateCartQuantity(line, val);
+        }
+      }, 500);
+    });
+  });
+
+  // Remove icon ক্লিক
+  document.querySelectorAll('.remove-icon').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const line = e.currentTarget.dataset.line;
+      if (confirm('Are you sure you want to remove this item?')) {
+        removeCartItem(line);
       }
     });
   });
+});
