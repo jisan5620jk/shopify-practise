@@ -1,43 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-  const productForm = document.querySelector('.ajax-product-form');
-  if (!productForm) return;
-
-  productForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-
-    // Validate presence of 'id' input
-    const variantIdInput = productForm.querySelector('input[name="id"]');
-    if (!variantIdInput || !variantIdInput.value) {
-      alert('Please select a product variant.');
-      return;
-    }
-
-    const formData = new FormData(productForm);
-    addToCartAjax(formData);
-  });
-
-  function addToCartAjax(formData) {
-    fetch('/cart/add.js', {
-      method: 'POST',
-      body: formData,
-      headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    })
-    .then(res => {
-      if (!res.ok) throw new Error('Add to cart failed');
-      return res.json();
-    })
-    .then(data => {
-      console.log('Product added:', data);
-      // কার্ট কাউন্ট আপডেট এবং ড্রয়ার ওপেন করো
-      updateCartCount().then(() => window.openCartDrawer());
-    })
-    .catch(err => {
-      console.error(err);
-      alert('Failed to add product to cart. Please try again.');
-    });
-  }
-
   // --- Drawer elements ---
   const drawer = document.getElementById('drawer');
   const overlay = document.getElementById('overlay');
@@ -192,12 +154,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- AJAX Product Add to Cart Form ---
   const productForm = document.querySelector('.ajax-product-form');
-  if (productForm) {
-    productForm.addEventListener('submit', e => {
-      e.preventDefault();
-      addToCartAjax(new FormData(productForm));
-    });
-  }
+  if (!productForm) return;
+
+  productForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    // Validate presence of 'id' input
+    const variantIdInput = productForm.querySelector('input[name="id"]');
+    if (!variantIdInput || !variantIdInput.value) {
+      alert('Please select a product variant.');
+      return;
+    }
+
+    const formData = new FormData(productForm);
+    addToCartAjax(formData);
+  });
 
   function addToCartAjax(formData) {
     fetch('/cart/add.js', {
@@ -210,15 +181,13 @@ document.addEventListener('DOMContentLoaded', () => {
       return res.json();
     })
     .then(data => {
-      console.log('✅ Product added:', data);
-      return updateCartCount();
-    })
-    .then(() => {
-      window.openCartDrawer();  // ড্রয়ার ওপেন করবে
+      console.log('Product added:', data);
+      // কার্ট কাউন্ট আপডেট এবং ড্রয়ার ওপেন করো
+      updateCartCount().then(() => window.openCartDrawer());
     })
     .catch(err => {
-      console.error('❌ Error adding to cart:', err);
-      // চাইলে ইউজারকে জানাও (alert/modal)
+      console.error(err);
+      alert('Failed to add product to cart. Please try again.');
     });
   }
 });
