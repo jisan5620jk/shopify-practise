@@ -550,32 +550,4 @@
       });
     });
   });
-
-  document.addEventListener('DOMContentLoaded', function () {
-    const form = document.getElementById('ajax-product-form');
-
-    form.addEventListener('submit', function (e) {
-      e.preventDefault(); // Prevent default form submission
-
-      const formData = new FormData(form);
-
-      fetch('/cart/add.js', {
-        method: 'POST',
-        body: formData,
-        headers: {
-          Accept: 'application/json',
-        },
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          console.log('Product added:', data);
-          document.querySelector('[data-cart-type="drawer"]');
-          // ✅ You can trigger a cart drawer update or show a success message here
-        })
-        .catch((error) => {
-          console.error('Error adding to cart:', error);
-          // ❌ Handle error (e.g., show a message to the user)
-        });
-    });
-  });
 </script>
