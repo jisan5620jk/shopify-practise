@@ -25,27 +25,61 @@
     <div class="p-5">
       <div id="cart-items-container">
         {% for item in cart.items %}
-          <div class="cart-item relative" data-line="{{ forloop.index }}">
-            <div class="image"><img src="{{ item.image | img_url: 'master' }}" alt="{{ item.title }}"></div>
-            <div class="title">
-              <h3>{{ item.title }}</h3>
-            </div>
-            <div class="quantity-controls">
-              <button type="button" class="decreaseBtn" data-line="{{ forloop.index }}">-</button>
-
-              <input
-                type="text"
-                class="quantityInput"
-                data-line="{{ forloop.index }}"
-                value="{{ item.quantity }}"
-                min="1"
+          <div class="cart-item relative flex gap-4 p-4 border-b border-gray-200" data-line="{{ forloop.index }}">
+            <!-- 🖼 Product Image -->
+            <div class="w-32 flex-shrink-0">
+              <img
+                src="{{ item.image | img_url: 'master' }}"
+                width="100%"
+                height="auto"
+                alt="{{ item.title }}"
+                class="rounded"
               >
-              <button type="button" class="increaseBtn" data-line="{{ forloop.index }}">+</button>
             </div>
-            <a href="#" class="remove-icon" data-line="{{ forloop.index }}">
+
+            <!-- 📦 Product Details -->
+            <div class="flex flex-col justify-between flex-grow">
+              <div>
+                <h3 class="text-sm font-semibold text-gray-800">{{ item.title }}</h3>
+              </div>
+
+              <!-- 🔢 Quantity Controls -->
+              <div class="flex items-center gap-2 mt-2">
+                <button
+                  type="button"
+                  class="decreaseBtn px-2 py-1 border rounded text-sm"
+                  data-line="{{ forloop.index }}"
+                >
+                  −
+                </button>
+                <input
+                  type="text"
+                  class="quantityInput w-12 text-center border rounded text-sm"
+                  data-line="{{ forloop.index }}"
+                  value="{{ item.quantity }}"
+                  min="1"
+                >
+                <button
+                  type="button"
+                  class="increaseBtn px-2 py-1 border rounded text-sm"
+                  data-line="{{ forloop.index }}"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            <!-- 🗑 Remove Button -->
+            <a
+              href="#"
+              class="remove-icon absolute top-2 right-2 text-gray-500 hover:text-red-600"
+              data-line="{{ forloop.index }}"
+            >
               {% render 'icons', icon: 'trash' %}
             </a>
-            <div class="item-loader hidden absolute right-0 top-0 size-10" data-line="{{ forloop.index }}">
+
+            <!-- ⏳ Loader -->
+            <div class="item-loader hidden absolute top-2 right-10 w-6 h-6" data-line="{{ forloop.index }}">
               {{ 'loading-spinner.svg' | inline_asset_content }}
             </div>
           </div>
