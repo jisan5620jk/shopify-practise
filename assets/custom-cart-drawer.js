@@ -154,23 +154,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- AJAX Product Add to Cart Form ---
   const productForm = document.querySelector('.ajax-product-form');
-  if (!productForm) return;
 
-  productForm.addEventListener('submit', (e) => {
+  if (!productForm) {
+    console.warn('No form with class .ajax-product-form found');
+    return;
+  }
+
+  productForm.addEventListener('submit', e => {
     e.preventDefault();
 
-    // Validate presence of 'id' input
-    const variantIdInput = productForm.querySelector('input[name="id"]');
-    if (!variantIdInput || !variantIdInput.value) {
-      alert('Please select a product variant.');
+    const variantInput = productForm.querySelector('input[name="id"]');
+    if (!variantInput || !variantInput.value) {
+      alert('Please select a product variant');
       return;
     }
 
     const formData = new FormData(productForm);
-    addToCartAjax(formData);
-  });
 
-  function addToCartAjax(formData) {
     fetch('/cart/add.js', {
       method: 'POST',
       body: formData,
@@ -182,12 +182,12 @@ document.addEventListener('DOMContentLoaded', () => {
     })
     .then(data => {
       console.log('Product added:', data);
-      // কার্ট কাউন্ট আপডেট এবং ড্রয়ার ওপেন করো
+      // Update cart count এবং ড্রয়ার ওপেন
       updateCartCount().then(() => window.openCartDrawer());
     })
     .catch(err => {
-      console.error(err);
-      alert('Failed to add product to cart. Please try again.');
+      console.error('Add to cart error:', err);
+      alert('Failed to add product to cart.');
     });
-  }
+  });
 });
