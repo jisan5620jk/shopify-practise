@@ -11,7 +11,7 @@
   class="fixed right-0 w-[390px] h-full flex flex-col justify-between py-5 bg-white transform translate-x-full transition-transform duration-300 ease-in-out z-50 overflow-hidden"
 >
   {% if cart != empty %}
-    <div class="relative">
+    <div class="relative h-[calc(100%-300px)]">
       <div id="drawer-loader" class="hidden absolute z-50 top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 size-10">
         {{ 'loading-spinner.svg' | inline_asset_content }}
       </div>
@@ -108,9 +108,10 @@
       Your cart is currently empty.
     </div>
   {% endif %}
-  <div>
-    <!-- UPSALE SLIDER START -->
-    {% if cart != empty %}
+
+  {% if cart != empty %}
+    <div>
+      <!-- UPSALE SLIDER START -->
       <div class="cart-upsell-slider-wrapper">
         <div class="cart-upsell-slider swiper-container relative">
           <div class="swiper-wrapper">
@@ -160,34 +161,34 @@
           <div class="swiper-pagination"></div>
         </div>
       </div>
-    {% endif %}
-    <!-- UPSALE SLIDER END -->
+      <!-- UPSALE SLIDER END -->
 
-    <!-- DRAWER FOOTER START -->
-    <div class="drawer-footer px-5 py-4 border-t border-gray-200 bg-white">
-      <div class="flex items-center justify-between mb-4">
-        <span class="text-4xl font-semibold text-black">Subtotal</span>
-        <span class="text-4xl font-semibold text-black">{{ cart.total_price | money }}</span>
+      <!-- DRAWER FOOTER START -->
+      <div class="drawer-footer px-5 py-4 border-t border-gray-200 bg-white">
+        <div class="flex items-center justify-between mb-4">
+          <span class="text-4xl font-semibold text-black">Subtotal</span>
+          <span class="text-4xl font-semibold text-black">{{ cart.total_price | money }}</span>
+        </div>
+
+        <div class="flex flex-col gap-3">
+          <a
+            href="{{ routes.checkout_url }}"
+            class="block w-full text-center bg-black text-white py-3 rounded hover:bg-gray-800 transition"
+          >
+            Proceed to Checkout
+          </a>
+
+          <a
+            href="{{ routes.cart_url }}"
+            class="block w-full text-center bg-black text-white py-3 rounded hover:bg-gray-800 transition"
+          >
+            View Full Cart
+          </a>
+        </div>
       </div>
-
-      <div class="flex flex-col gap-3">
-        <a
-          href="{{ routes.checkout_url }}"
-          class="block w-full text-center bg-black text-white py-3 rounded hover:bg-gray-800 transition"
-        >
-          Proceed to Checkout
-        </a>
-
-        <a
-          href="{{ routes.cart_url }}"
-          class="block w-full text-center bg-black text-white py-3 rounded hover:bg-gray-800 transition"
-        >
-          View Full Cart
-        </a>
-      </div>
+      <!-- DRAWER FOOTER END -->
     </div>
-    <!-- DRAWER FOOTER END -->
-  </div>
+  {% endif %}
 </div>
 
 <!-- Overlay -->
