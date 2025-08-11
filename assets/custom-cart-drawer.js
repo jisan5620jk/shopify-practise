@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // Refresh cart drawer HTML content by fetching from server
-  const drawerLoader = document.getElementById('drawer-loader');
+  const drawerLoader = document.querySelector('drawer-loader');
 
   const refreshCartDrawer = () => {
     if (drawerLoader) drawerLoader.classList.remove('hidden');  // loader দেখাও
