@@ -48,7 +48,15 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector(`.item-loader[data-line="${line}"]`)?.classList.add('hidden');
   };
 
-  // Update cart count
+  // Cart drawer loader (for add to cart)
+  const showCartLoader = () => {
+    if (drawerLoader) drawerLoader.classList.remove('hidden');
+  };
+  const hideCartLoader = () => {
+    if (drawerLoader) drawerLoader.classList.add('hidden');
+  };
+
+  // Update cart count in header & badges
   const updateCartCount = () => {
     return fetch('/cart.js', {
       headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -64,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   };
 
-  // Slider initialize function
+  // Initialize upsell slider (Swiper)
   function initUpsellSlider() {
     if (typeof Swiper !== 'undefined') {
       const upsellSlider = document.querySelector('.cart-upsell-slider.swiper-container');
@@ -81,15 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Cart drawer loader show/hide (only for add to cart)
-  function showCartLoader() {
-    if (drawerLoader) drawerLoader.classList.remove('hidden');
-  }
-  function hideCartLoader() {
-    if (drawerLoader) drawerLoader.classList.add('hidden');
-  }
-
-  // Refresh drawer content WITHOUT loader (loader only on add to cart)
+  // Refresh drawer content (fetch from server & update DOM)
   const refreshCartDrawer = () => {
     return fetch('/cart?view=drawer')
       .then(res => {
@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (newCartContent && currentCartContainer) {
           currentCartContainer.innerHTML = newCartContent.innerHTML;
           attachCartItemEventListeners();
-          initUpsellSlider(); // init slider on content update
+          initUpsellSlider();
         }
       })
       .catch(err => {
@@ -161,13 +161,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Attach event listeners on cart items inside drawer
   const attachCartItemEventListeners = () => {
-    // Remove old event listeners by cloning nodes
+    // Remove old listeners by cloning nodes
     document.querySelectorAll('.increaseBtn').forEach(btn => btn.replaceWith(btn.cloneNode(true)));
     document.querySelectorAll('.decreaseBtn').forEach(btn => btn.replaceWith(btn.cloneNode(true)));
     document.querySelectorAll('.quantityInput').forEach(input => input.replaceWith(input.cloneNode(true)));
     document.querySelectorAll('.remove-icon').forEach(link => link.replaceWith(link.cloneNode(true)));
 
-    // Add new event listeners
+    // Add event listeners
     document.querySelectorAll('.increaseBtn').forEach(btn => {
       btn.addEventListener('click', e => {
         const line = e.currentTarget.dataset.line;
@@ -216,12 +216,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initial attach on page load
   attachCartItemEventListeners();
 
-  // AJAX Add to Cart Form
+  // AJAX Add to Cart Form submit handler
   const productForm = document.querySelector('.ajax-product-form');
 
-  if (!productForm) {
-    console.warn('No form with class .ajax-product-form found');
-  } else {
+  if (productForm) {
     productForm.addEventListener('submit', e => {
       e.preventDefault();
 
@@ -231,10 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      // Show drawer-loader ONLY on add to cart
       showCartLoader();
-
-      // Open drawer immediately with existing content
       window.openCartDrawer();
 
       const formData = new FormData(productForm);
@@ -271,10 +266,46 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 6. On Shopify's cart update event, reinitialize slider
+  // AJAX Add to Cart Button (alternative) click handler
+  document.addEventListener('click', function (e) {
+    if (e.target.closest('.ajax-add-to-cart-button')) {
+      const button = e.target.closest('.ajax-add-to-cart-button');
+      const variantId = button.getAttribute('data-variant-id');
+
+      if (!variantId) {
+        alert('Variant ID missing!');
+        return;
+      }
+
+      button.disabled = true;
+      button.textContent = 'Adding...';
+      showCartLoader();
+      window.openCartDrawer();
+
+      fetch('/cart/add.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        body: JSON.stringify({ id: variantId, quantity: 1 }),
+      })
+        .then(res => res.json())
+        .then(() => updateCartCount())
+        .then(() => refreshCartDrawer())
+        .catch(err => {
+          alert('Failed to add product.');
+          console.error(err);
+        })
+        .finally(() => {
+          button.disabled = false;
+          button.textContent = 'Add to Cart';
+          hideCartLoader();
+        });
+    }
+  });
+
+  // Reinitialize slider on cart update event
   document.addEventListener('cart:updated', initUpsellSlider);
 
-  // 7. Use MutationObserver to watch for changes inside cart drawer and reinit slider
+  // MutationObserver to watch drawer changes and reinit slider
   const drawerElement = document.querySelector('cart-drawer');
   if (drawerElement) {
     const observer = new MutationObserver(() => {
