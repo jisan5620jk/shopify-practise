@@ -117,11 +117,11 @@
           {% for product in products %}
             <div class="swiper-slide">
               <div class=" border p-3 rounded shadow-sm flex items-center justify-between">
-                <a href="{{ product.url }}" class="block mb-3">
+                <a href="{{ product.url }}" class="block w-24 mb-3">
                   <img
-                    src="{{ product.featured_image | image_url: 'medium' }}"
+                    src="{{ product.featured_image | img_url: 'medium' }}"
                     alt="{{ product.title }}"
-                    width="100px"
+                    width="100%"
                     height="auto"
                   >
                 </a>
