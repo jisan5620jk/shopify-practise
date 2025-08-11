@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.style.overflow = '';
   };
 
-  // ✅ Attach click event to all elements with data-cart-type="drawer"
+  // ✅ Loop through all drawer triggers
   document.querySelectorAll('[data-cart-type="drawer"]').forEach(openBtn => {
     openBtn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -25,9 +25,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  closeBtn?.addEventListener('click', closeDrawer);
-  overlay?.addEventListener('click', closeDrawer);
-
+  closeBtn.addEventListener('click', closeDrawer);
+  overlay.addEventListener('click', closeDrawer);
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeDrawer();
   });
