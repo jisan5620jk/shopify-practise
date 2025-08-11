@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Helpers
+  // Loader দেখানোর/লুকানোর হেল্পার
   const showLoader = (line) => {
     document.querySelector(`.item-loader[data-line="${line}"]`)?.classList.remove('hidden');
   };
@@ -50,30 +50,45 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector(`.item-loader[data-line="${line}"]`)?.classList.add('hidden');
   };
 
-  // Ajax কার্ট update ফাংশন
+  // কার্ট কাউন্ট আপডেট ফাংশন (একাধিক সিলেক্টরে আপডেট)
+  const updateCartCount = () => {
+    return fetch('/cart.js', {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(res => res.json())
+    .then(cart => {
+      const count = cart.item_count;
+      const countElements = document.querySelectorAll('.cart-count, .header-cart-count, #cart-count');
+      countElements.forEach(el => {
+        el.textContent = count;
+      });
+    });
+  };
+
+  // quantity আপডেট Ajax ফাংশন
   const updateCartQuantity = (line, quantity) => {
-    if (quantity < 1) return; // min 1
+    if (quantity < 1) return;
 
     showLoader(line);
 
-    fetch('/cart/change.js', {
+    return fetch('/cart/change.js', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
       body: JSON.stringify({ line: line, quantity: quantity })
     })
-      .then(res => res.json())
-      .then(cart => {
-        hideLoader(line);
-        // এখানে তুমি চাইলে পুরো cart রিফ্রেশ বা count আপডেট করতে পারো
-        console.log('Cart updated:', cart);
-      })
-      .catch(err => {
-        hideLoader(line);
-        console.error('Cart update failed:', err);
-      });
+    .then(res => res.json())
+    .then(cart => {
+      hideLoader(line);
+      console.log('Cart updated:', cart);
+      return updateCartCount();
+    })
+    .catch(err => {
+      hideLoader(line);
+      console.error('Cart update failed:', err);
+    });
   };
 
-  // Ajax কার্ট আইটেম রিমুভ ফাংশন (quantity = 0)
+  // কার্ট আইটেম রিমুভ (quantity=0)
   const removeCartItem = (line) => {
     showLoader(line);
 
@@ -82,23 +97,24 @@ document.addEventListener('DOMContentLoaded', () => {
       headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
       body: JSON.stringify({ line: line, quantity: 0 })
     })
-      .then(res => res.json())
-      .then(cart => {
-        hideLoader(line);
-        // এখানে চাইলে cart রিফ্রেশ বা ডম আপডেট করো
-        console.log('Item removed:', cart);
-        // Optional: page refresh or remove DOM element
-        location.reload(); // অথবা চাইলে ডম ম্যানিপুলেশন করতে পারো
-      })
-      .catch(err => {
-        hideLoader(line);
-        console.error('Remove item failed:', err);
-      });
+    .then(res => res.json())
+    .then(cart => {
+      hideLoader(line);
+      console.log('Item removed:', cart);
+      updateCartCount();
+
+      // চাইলে DOM থেকে সরাতে পারো, অথবা পেজ রিফ্রেশ করতে পারো
+      // location.reload();
+    })
+    .catch(err => {
+      hideLoader(line);
+      console.error('Remove item failed:', err);
+    });
   };
 
-  // Increase button ক্লিক
+  // Increase quantity বাটন
   document.querySelectorAll('.increaseBtn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
+    btn.addEventListener('click', e => {
       const line = e.currentTarget.dataset.line;
       const input = document.querySelector(`.quantityInput[data-line="${line}"]`);
       let qty = parseInt(input.value) || 1;
@@ -108,9 +124,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Decrease button ক্লিক
+  // Decrease quantity বাটন
   document.querySelectorAll('.decreaseBtn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
+    btn.addEventListener('click', e => {
       const line = e.currentTarget.dataset.line;
       const input = document.querySelector(`.quantityInput[data-line="${line}"]`);
       let qty = parseInt(input.value) || 1;
@@ -120,10 +136,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Quantity ইনপুটে ম্যানুয়াল চেঞ্জ হলে debounce দিয়ে আপডেট (ঐচ্ছিক)
+  // Quantity ইনপুট পরিবর্তন হলে (debounce 500ms)
   document.querySelectorAll('.quantityInput').forEach(input => {
     let timeout;
-    input.addEventListener('input', (e) => {
+    input.addEventListener('input', e => {
       clearTimeout(timeout);
       const line = e.currentTarget.dataset.line;
       const val = parseInt(e.currentTarget.value);
@@ -135,14 +151,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Remove icon ক্লিক
+  // Remove আইকন ক্লিক — confirm ডায়ালগ ছাড়া সরাসরি রিমুভ
   document.querySelectorAll('.remove-icon').forEach(link => {
-    link.addEventListener('click', (e) => {
+    link.addEventListener('click', e => {
       e.preventDefault();
       const line = e.currentTarget.dataset.line;
-      if (confirm('Are you sure you want to remove this item?')) {
-        removeCartItem(line);
-      }
+      removeCartItem(line);
     });
   });
 });
