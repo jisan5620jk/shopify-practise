@@ -3,13 +3,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const drawer = document.getElementById('drawer');
   const overlay = document.getElementById('overlay');
   const closeBtn = document.getElementById('closeDrawerBtn');
+  const drawerLoader = document.getElementById('drawer-loader');
 
   if (!drawer || !overlay) {
     console.warn('Drawer or overlay element missing');
     return;
   }
 
-  // Drawer open function
+  // Drawer open
   window.openCartDrawer = function () {
     drawer.classList.remove('translate-x-full');
     drawer.classList.add('translate-x-0');
@@ -17,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.style.overflow = 'hidden';
   };
 
-  // Drawer close function
+  // Drawer close
   window.closeCartDrawer = function () {
     drawer.classList.add('translate-x-full');
     drawer.classList.remove('translate-x-0');
@@ -31,15 +32,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.key === 'Escape') window.closeCartDrawer();
   });
 
-  // Open drawer triggers
+  // Drawer open triggers
   document.querySelectorAll('[data-cart-type="drawer"]').forEach(el => {
-    el.addEventListener('click', e => {
+    el.addEventListener('click', async e => {
       if (el.tagName.toLowerCase() === 'a') e.preventDefault();
+      await refreshCartDrawer();
       window.openCartDrawer();
     });
   });
 
-  // Loader helpers
+  // Loader show/hide
   const showLoader = (line) => {
     document.querySelector(`.item-loader[data-line="${line}"]`)?.classList.remove('hidden');
   };
@@ -47,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector(`.item-loader[data-line="${line}"]`)?.classList.add('hidden');
   };
 
-  // Update cart count in all counters
+  // Update cart count
   const updateCartCount = () => {
     return fetch('/cart.js', {
       headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -63,11 +65,9 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   };
 
-  // Refresh cart drawer HTML content by fetching from server
-  const drawerLoader = document.querySelector('drawer-loader');
-
+  // Refresh drawer content
   const refreshCartDrawer = () => {
-    if (drawerLoader) drawerLoader.classList.remove('hidden');  // loader দেখাও
+    if (drawerLoader) drawerLoader.classList.remove('hidden');
 
     return fetch('/cart?view=drawer')
       .then(res => {
@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return res.text();
       })
       .then(html => {
-        if (drawerLoader) drawerLoader.classList.add('hidden'); // loader লুকাও
+        if (drawerLoader) drawerLoader.classList.add('hidden');
 
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
@@ -88,16 +88,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       })
       .catch(err => {
-        if (drawerLoader) drawerLoader.classList.add('hidden'); // error হলেও লুকাও
+        if (drawerLoader) drawerLoader.classList.add('hidden');
         console.error('Error refreshing cart drawer:', err);
       });
   };
 
-
-  // Update cart quantity
+  // Update quantity
   const updateCartQuantity = (line, quantity) => {
     if (quantity < 1) return Promise.resolve();
     showLoader(line);
+
     return fetch('/cart/change.js', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
@@ -117,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   };
 
-  // Remove cart item
+  // Remove item
   const removeCartItem = (line) => {
     showLoader(line);
     return fetch('/cart/change.js', {
@@ -139,15 +139,15 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   };
 
-  // Attach event listeners to quantity buttons, inputs and remove icons
+  // Attach event listeners on cart items inside drawer
   const attachCartItemEventListeners = () => {
-    // Remove old listeners to avoid duplicates
+    // Clear existing event listeners by cloning (to avoid duplicates)
     document.querySelectorAll('.increaseBtn').forEach(btn => btn.replaceWith(btn.cloneNode(true)));
     document.querySelectorAll('.decreaseBtn').forEach(btn => btn.replaceWith(btn.cloneNode(true)));
     document.querySelectorAll('.quantityInput').forEach(input => input.replaceWith(input.cloneNode(true)));
     document.querySelectorAll('.remove-icon').forEach(link => link.replaceWith(link.cloneNode(true)));
 
-    // Re-select after cloning
+    // Re-select elements after cloning
     document.querySelectorAll('.increaseBtn').forEach(btn => {
       btn.addEventListener('click', e => {
         const line = e.currentTarget.dataset.line;
@@ -193,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   };
 
-  // Initial attach for event listeners on page load
+  // Initial attach on page load
   attachCartItemEventListeners();
 
   // AJAX Add to Cart Form
