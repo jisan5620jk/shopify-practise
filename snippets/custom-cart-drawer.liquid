@@ -47,24 +47,24 @@
               </div>
 
               <!-- 🔢 Quantity Controls -->
-              <div class="flex items-center gap-2 bg-[#F8F8F8] max-w-[103px] w-full mt-2">
+              <div class="flex items-center justify-between gap-2 bg-[#F8F8F8] max-w-[103px] w-full mt-2">
                 <button
                   type="button"
-                  class="decreaseBtn text-lg"
+                  class="decreaseBtn text-lg size-8"
                   data-line="{{ forloop.index }}"
                 >
                   −
                 </button>
                 <input
                   type="text"
-                  class="quantityInput text-base"
+                  class="quantityInput text-base w-9"
                   data-line="{{ forloop.index }}"
                   value="{{ item.quantity }}"
                   min="1"
                 >
                 <button
                   type="button"
-                  class="increaseBtn text-lg"
+                  class="increaseBtn text-lg size-8"
                   data-line="{{ forloop.index }}"
                 >
                   +
