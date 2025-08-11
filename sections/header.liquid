@@ -117,7 +117,7 @@
     >
       {% if cart.item_count > 0 %}
         {%- render 'icons', icon: 'bag-fill' -%}
-        {{ cart.item_count }}
+        <span class="cart-count">{{ cart.item_count }}</span>
       {% else %}
         {%- render 'icons', icon: 'bag' -%}
       {% endif %}
