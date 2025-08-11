@@ -126,6 +126,13 @@
     "show_cart_note": false,
     "cart_drawer_collection": "",
     "cart_color_scheme": "scheme-1",
+    "upsell_products": [
+      "basic-sweatshirt",
+      "black-shorts-with-belt",
+      "caro-dress",
+      "green-flower-shirt",
+      "white-sandals"
+    ],
     "sections": {
       "main-password-header": {
         "type": "main-password-header",
