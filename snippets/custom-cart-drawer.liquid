@@ -19,14 +19,14 @@
     </button>
   </div>
   <div class="p-5">
-    {% for item in cart.items %}
-      <div class="cart-item" data-line="{{ forloop.index }}">
-        <div>
-          <img src="{{ item.image | img_url: 'master' }}" alt="{{ item.title }}">
-        </div>
-        <div>
-          <h3>{{ item.title }}</h3>
-          <div class="product-quantity">
+    <div id="cart-items-container">
+      {% for item in cart.items %}
+        <div class="cart-item" data-line="{{ forloop.index }}">
+          <div class="image"><img src="{{ item.image | img_url: 'master' }}" alt="{{ item.title }}"></div>
+          <div class="title">
+            <h3>{{ item.title }}</h3>
+          </div>
+          <div class="quantity-controls">
             <button type="button" class="decreaseBtn" data-line="{{ forloop.index }}">-</button>
             <input
               type="text"
@@ -44,8 +44,8 @@
             {{ 'loading-spinner.svg' | inline_asset_content }}
           </div>
         </div>
-      </div>
-    {% endfor %}
+      {% endfor %}
+    </div>
   </div>
 </div>
 <!-- Overlay -->
