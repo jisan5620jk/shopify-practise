@@ -64,6 +64,31 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   };
 
+  // Slider initialize function
+  function initUpsellSlider() {
+    if (typeof Swiper !== 'undefined') {
+      const upsellSlider = document.querySelector('.cart-upsell-slider.swiper-container');
+      if (upsellSlider && !upsellSlider.classList.contains('swiper-initialized')) {
+        new Swiper(upsellSlider, {
+          slidesPerView: 1,
+          spaceBetween: 16,
+          navigation: {
+            nextEl: upsellSlider.querySelector('.swiper-button-next'),
+            prevEl: upsellSlider.querySelector('.swiper-button-prev'),
+          },
+        });
+      }
+    }
+  }
+
+  // Cart drawer loader show/hide (only for add to cart)
+  function showCartLoader() {
+    if (drawerLoader) drawerLoader.classList.remove('hidden');
+  }
+  function hideCartLoader() {
+    if (drawerLoader) drawerLoader.classList.add('hidden');
+  }
+
   // Refresh drawer content WITHOUT loader (loader only on add to cart)
   const refreshCartDrawer = () => {
     return fetch('/cart?view=drawer')
@@ -80,6 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (newCartContent && currentCartContainer) {
           currentCartContainer.innerHTML = newCartContent.innerHTML;
           attachCartItemEventListeners();
+          initUpsellSlider(); // init slider on content update
         }
       })
       .catch(err => {
@@ -195,54 +221,65 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (!productForm) {
     console.warn('No form with class .ajax-product-form found');
-    return;
+  } else {
+    productForm.addEventListener('submit', e => {
+      e.preventDefault();
+
+      const variantInput = productForm.querySelector('input[name="id"]');
+      if (!variantInput || !variantInput.value) {
+        alert('Please select a product variant');
+        return;
+      }
+
+      // Show drawer-loader ONLY on add to cart
+      showCartLoader();
+
+      // Open drawer immediately with existing content
+      window.openCartDrawer();
+
+      const formData = new FormData(productForm);
+
+      fetch('/cart/add.js', {
+        method: 'POST',
+        body: formData,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      })
+        .then(async res => {
+          if (!res.ok) {
+            let errorMessage = 'Add to cart failed.';
+            try {
+              const errorData = await res.json();
+              if (errorData && errorData.description) errorMessage = errorData.description;
+            } catch { }
+            throw new Error(errorMessage);
+          }
+          return res.json();
+        })
+        .then(data => {
+          console.log('Product added:', data);
+          updateCartCount()
+            .then(() => refreshCartDrawer())
+            .finally(() => {
+              hideCartLoader();
+            });
+        })
+        .catch(err => {
+          console.error('Add to cart error:', err);
+          alert(err.message || 'Failed to add product to cart.');
+          hideCartLoader();
+        });
+    });
   }
 
-  productForm.addEventListener('submit', e => {
-    e.preventDefault();
+  // 6. On Shopify's cart update event, reinitialize slider
+  document.addEventListener('cart:updated', initUpsellSlider);
 
-    const variantInput = productForm.querySelector('input[name="id"]');
-    if (!variantInput || !variantInput.value) {
-      alert('Please select a product variant');
-      return;
-    }
-
-    // Show drawer-loader ONLY on add to cart
-    if (drawerLoader) drawerLoader.classList.remove('hidden');
-
-    // Open drawer immediately with existing content
-    window.openCartDrawer();
-
-    const formData = new FormData(productForm);
-
-    fetch('/cart/add.js', {
-      method: 'POST',
-      body: formData,
-      headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    })
-      .then(async res => {
-        if (!res.ok) {
-          let errorMessage = 'Add to cart failed.';
-          try {
-            const errorData = await res.json();
-            if (errorData && errorData.description) errorMessage = errorData.description;
-          } catch { }
-          throw new Error(errorMessage);
-        }
-        return res.json();
-      })
-      .then(data => {
-        console.log('Product added:', data);
-        updateCartCount()
-          .then(() => refreshCartDrawer())
-          .finally(() => {
-            if (drawerLoader) drawerLoader.classList.add('hidden');
-          });
-      })
-      .catch(err => {
-        console.error('Add to cart error:', err);
-        alert(err.message || 'Failed to add product to cart.');
-        if (drawerLoader) drawerLoader.classList.add('hidden');
-      });
-  });
+  // 7. Use MutationObserver to watch for changes inside cart drawer and reinit slider
+  const drawerElement = document.querySelector('cart-drawer');
+  if (drawerElement) {
+    const observer = new MutationObserver(() => {
+      initUpsellSlider();
+    });
+    observer.observe(drawerElement, { childList: true, subtree: true });
+  }
 });
