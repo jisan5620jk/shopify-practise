@@ -213,8 +213,12 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    // Step 1: drawer open করা সাথে সাথে আগের content দেখানো
+    window.openCartDrawer();
+
     const formData = new FormData(productForm);
 
+    // Step 2: AJAX request পাঠানো add to cart করার জন্য
     fetch('/cart/add.js', {
       method: 'POST',
       body: formData,
@@ -222,28 +226,27 @@ document.addEventListener('DOMContentLoaded', () => {
         'X-Requested-With': 'XMLHttpRequest'
       }
     })
-      .then(async res => {
-        if (!res.ok) {
-          let errorMessage = 'Add to cart failed.';
-          try {
-            const errorData = await res.json();
-            if (errorData && errorData.description) errorMessage = errorData.description;
-          } catch { }
-          throw new Error(errorMessage);
-        }
-        return res.json();
-      })
-      .then(data => {
-        console.log('Product added:', data);
-        updateCartCount()
-          .then(() => {
-            refreshCartDrawer();
-            window.openCartDrawer();
-          });
-      })
-      .catch(err => {
-        console.error('Add to cart error:', err);
-        alert(err.message || 'Failed to add product to cart.');
-      });
+    .then(async res => {
+      if (!res.ok) {
+        let errorMessage = 'Add to cart failed.';
+        try {
+          const errorData = await res.json();
+          if (errorData && errorData.description) errorMessage = errorData.description;
+        } catch { }
+        throw new Error(errorMessage);
+      }
+      return res.json();
+    })
+    .then(data => {
+      console.log('Product added:', data);
+      // Step 3: Cart count update + drawer refresh
+      updateCartCount()
+        .then(() => refreshCartDrawer());
+    })
+    .catch(err => {
+      console.error('Add to cart error:', err);
+      alert(err.message || 'Failed to add product to cart.');
+    });
   });
+
 });
