@@ -551,26 +551,35 @@
     });
   });
 
-  document.querySelector('.ajax-product-form').addEventListener('submit', function (e) {
-    e.preventDefault();
+  document.addEventListener('DOMContentLoaded', function () {
+    const productForm = document.querySelector('.ajax-product-form');
 
-    // 1. AJAX দিয়ে কার্টে পণ্য যোগ
-    addToCartAjax(new FormData(this));
+    if (!productForm) return;
 
-    // 2. Drawer ওপেন
-    openCartDrawer();
+    productForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      addToCartAjax(new FormData(this));
+    });
+
+    function addToCartAjax(formData) {
+      fetch('/cart/add.js', {
+        method: 'POST',
+        body: formData,
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error('Add to cart failed');
+          return res.json();
+        })
+        .then((data) => {
+          console.log('✅ Added to cart:', data);
+          return refreshCartDrawer(); // কার্ট রিফ্রেশ
+        })
+        .then(() => {
+          openCartDrawer(); // ড্রয়ার ওপেন
+        })
+        .catch((err) => {
+          console.error('❌ Error adding to cart:', err);
+        });
+    }
   });
-
-  function addToCartAjax(formData) {
-    fetch('/cart/add.js', {
-      method: 'POST',
-      body: formData,
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        console.log('Added to cart:', data);
-        // Drawer refresh code
-        refreshCartDrawer();
-      });
-  }
 </script>
