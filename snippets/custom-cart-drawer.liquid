@@ -15,7 +15,7 @@
       <div id="drawer-loader" class="hidden absolute z-50 top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 size-10">
         {{ 'loading-spinner.svg' | inline_asset_content }}
       </div>
-      <div class="h-full flex items-center justify-between px-5 py-3 border-b">
+      <div class="flex items-center justify-between px-5 py-3 border-b">
         <h2 class="text-lg font-semibold text-gray-700 inline-flex gap-2">
           Cart
           <span class="cart-count size-[25px] flex items-center justify-center rounded-full bg-black text-white text-base">
@@ -108,7 +108,7 @@
   {% endif %}
 
   {% if cart != empty %}
-    <div class="h-full">
+    <div>
       <!-- UPSALE SLIDER START -->
       <div class="cart-upsell-slider-wrapper">
         <div class="cart-upsell-slider swiper-container relative">
