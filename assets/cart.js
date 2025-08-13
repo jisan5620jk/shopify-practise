@@ -214,15 +214,11 @@ class CartItems extends HTMLElement {
 
         CartPerformance.measureFromEvent(`${eventTarget}:user-action`, event);
 
-
         document.dispatchEvent(new CustomEvent('cart:updated', {
           detail: { cart: parsedState }
         }));
 
-
         publish(PUB_SUB_EVENTS.cartUpdate, { source: 'cart-items', cartData: parsedState, variantId: variantId });
-
-
 
       })
       .catch(() => {
