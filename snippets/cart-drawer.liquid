@@ -849,7 +849,7 @@
       const button = e.target.closest('.ajax-add-to-cart-button');
       const variantId = button.getAttribute('data-variant-id');
 
-      // button disable করা এবং loading text দেখানো
+      // button disable করা এবং show loading text
       button.disabled = true;
       button.textContent = 'Adding...';
       showCartLoader(); // add to cart শুরুর সাথে loader দেখানো
