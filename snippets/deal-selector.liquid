@@ -1,0 +1,379 @@
+{%- comment -%}
+  Deal Selector (single snippet)
+  Usage example (in product template):
+    {% capture ds_cfg %}
+    {
+      "heading": "Bundle promotion is valid till 11:59 PM",
+      "button_label": "Add to cart",
+      "redirect_to_cart": true,
+      "deals": [
+        { "title":"1 Pair", "subtitle":"Standard Price", "units":1, "discount_type":"none", "discount_value":0 },
+        { "title":"2 Pairs", "subtitle":"10% extra discount on the total order!", "units":2, "discount_type":"percent", "discount_value":10, "badge":"MOST POPULAR!" },
+        { "title":"3 Pairs", "subtitle":"15% extra discount on the total order!", "units":3, "discount_type":"percent", "discount_value":15, "badge":"BEST DEAL", "open": true }
+      ]
+    }
+    {% endcapture %}
+    {% render 'deal-selector', product: product, config: ds_cfg %}
+  Notes:
+  - This snippet only shows the discounted total in UI. Checkout‑e real discount dite Shopify Discounts/Functions/app use korun.
+{%- endcomment -%}
+
+{%- assign _root_id = 'ds-' | append: product.id | append: '-' | append: 'now' | date: '%s' -%}
+<div id="{{ _root_id }}" class="ds" data-snippet="deal-selector">
+  <style>
+    .ds { max-width: 900px; margin: 0 auto; font-family: inherit; }
+    .ds-heading { text-align: center; margin: 8px 0 18px; font-weight: 600; }
+    .ds-deal { border: 2px solid #e5e5e5; border-radius: 14px; margin-bottom: 14px; background:#fff; overflow: hidden; }
+    .ds-deal.is-open { border-color: #111; box-shadow: 0 0 0 2px #111 inset; }
+    .ds-head { display:grid; grid-template-columns: auto 1fr auto; gap:12px; width:100%; padding:16px; align-items:center; background:#fff; border:0; cursor:pointer; }
+    .ds-radio { width:22px; height:22px; border:2px solid #555; border-radius:50%; position:relative; }
+    .ds-deal.is-open .ds-radio::after { content:""; position:absolute; inset:4px; background:#111; border-radius:50%; }
+    .ds-tt { display:grid; gap:2px; text-align:left; }
+    .ds-line1 { display:flex; align-items:center; gap:8px; }
+    .ds-badge { background:#e83; color:#fff; border-radius:999px; font-size:12px; padding:2px 8px; text-transform:uppercase; }
+    .ds-sub { color:#666; font-size:14px; }
+    .ds-price { text-align:right; }
+    .ds-total { font-weight:700; }
+    .ds-compare { margin-left:6px; color:#888; }
+    .ds-body { border-top:1px solid #eee; padding:12px 16px 16px; }
+    .ds-note { color:#666; font-size:13px; margin-bottom:8px; }
+    .ds-units { display:grid; gap:12px; }
+    .ds-unit { border:1px solid #eaeaea; border-radius:10px; padding:12px; }
+    .ds-unit__title { font-weight:600; margin-bottom:8px; }
+    .ds-label { display:block; font-size:12px; color:#555; margin:8px 0 4px; }
+    .ds-select { width:100%; padding:8px 10px; border-radius:8px; border:1px solid #ccc; background:#fff; }
+    .ds-actions { margin-top:16px; }
+    .ds-add { width:100%; background:#1b7f3a; color:#fff; border:0; padding:14px 18px; border-radius:10px; font-weight:700; cursor:pointer; }
+    .ds-add.is-loading { opacity:.7; cursor:wait; }
+    .ds-err { margin-top:10px; color:#b00020; font-size:14px; }
+    @media (min-width:720px){ .ds-units{ grid-template-columns:1fr 1fr; } }
+  </style>
+
+  <script type="application/json" class="ds-product-json">
+    {{ product | json }}
+  </script>
+  {% if config %}
+    <script type="application/json" class="ds-config-json">
+      {{ config }}
+    </script>
+  {% else %}
+    <script type="application/json" class="ds-config-json">
+      {
+        "heading": "Bundle promotion is valid till 11:59 PM",
+        "button_label": "Add to cart",
+        "redirect_to_cart": true,
+        "deals": [
+          { "title": "1 Pair", "subtitle": "Standard Price", "units": 1, "discount_type": "none", "discount_value": 0 },
+          {
+            "title": "2 Pairs",
+            "subtitle": "10% extra discount on the total order!",
+            "units": 2,
+            "discount_type": "percent",
+            "discount_value": 10,
+            "badge": "MOST POPULAR!"
+          },
+          {
+            "title": "3 Pairs",
+            "subtitle": "15% extra discount on the total order!",
+            "units": 3,
+            "discount_type": "percent",
+            "discount_value": 15,
+            "badge": "BEST DEAL",
+            "open": true
+          }
+        ]
+      }
+    </script>
+  {% endif %}
+
+  <div class="ds-heading" data-ds="heading"></div>
+  <div class="ds-deals" data-ds="deals"></div>
+  <div class="ds-actions">
+    <button class="ds-add" data-ds="add">
+      <span style="margin-right:8px">🛒</span><span data-ds="btn-text">Add to cart</span>
+    </button>
+    <div class="ds-err" data-ds="err" role="alert" aria-live="polite" hidden></div>
+  </div>
+
+  <script>
+  (function(){
+    const root = document.getElementById('{{ _root_id }}'); if(!root) return;
+    const product = JSON.parse(root.querySelector('.ds-product-json').textContent || '{}');
+    let cfgRaw = root.querySelector('.ds-config-json').textContent.trim();
+    let cfg = {};
+    try { cfg = JSON.parse(cfgRaw); } catch(e){ cfg = {}; }
+    const dealsCfg = Array.isArray(cfg) ? cfg : (cfg.deals || []);
+    const heading = Array.isArray(cfg) ? '' : (cfg.heading || '');
+    const buttonLabel = Array.isArray(cfg) ? 'Add to cart' : (cfg.button_label || 'Add to cart');
+    const redirectToCart = Array.isArray(cfg) ? false : !!cfg.redirect_to_cart;
+
+    root.querySelector('[data-ds="heading"]').textContent = heading || '';
+    root.querySelector('[data-ds="btn-text"]').textContent = buttonLabel;
+
+    const moneyFmt = (function(){
+      if (window.Shopify && typeof Shopify.formatMoney === 'function') {
+        return (cents) => Shopify.formatMoney(cents, "{{ shop.money_format | replace: '"', '\"' }}");
+      }
+      try {
+        const fmt = new Intl.NumberFormat('{{ localization.country.iso_code | default: "en-US" }}', { style:'currency', currency: '{{ cart.currency.iso_code | default: shop.currency }}' });
+        return (cents) => fmt.format((cents||0)/100);
+      } catch(e){ return (cents)=> (cents/100).toFixed(2); }
+    })();
+
+    const variants = product.variants || [];
+    const options = product.options_with_values || [];
+
+    function findVariantIdFromOptions(opts){
+      // prefer available
+      for(const v of variants){
+        if(!v) continue;
+        if(v.available && v.options.every((ov,i)=> (opts[i]||'') == ov)) return v.id;
+      }
+      // fallback even if unavailable (to at least identify)
+      for(const v of variants){
+        if(v && v.options.every((ov,i)=> (opts[i]||'') == ov)) return v.id;
+      }
+      return null;
+    }
+    function getVariantById(id){ return variants.find(v=> v && v.id == id); }
+
+    // DOM builders
+    const dealsWrap = root.querySelector('[data-ds="deals"]');
+
+    function buildSelect(opt, optIndex){
+      const sel = document.createElement('select');
+      sel.className = 'ds-select js-opt';
+      sel.setAttribute('data-opt-index', optIndex);
+      opt.values.forEach(v=>{
+        const o = document.createElement('option');
+        o.value = v; o.textContent = v;
+        sel.appendChild(o);
+      });
+      return sel;
+    }
+
+    function buildDeal(deal, idx){
+      const d = {
+        title: deal.title || ((deal.units||1) + ' Unit'),
+        subtitle: deal.subtitle || '',
+        units: parseInt(deal.units || 1, 10),
+        discount_type: deal.discount_type || 'none', // none|percent|fixed
+        discount_value: Number(deal.discount_value || 0),
+        badge: deal.badge || '',
+        open: !!deal.open
+      };
+
+      const wrap = document.createElement('div');
+      wrap.className = 'ds-deal';
+      wrap.dataset.index = idx;
+      wrap.dataset.units = String(d.units);
+      wrap.dataset.discountType = d.discount_type;
+      wrap.dataset.discount = String(d.discount_value);
+
+      wrap.innerHTML = `
+        <button class="ds-head" type="button" aria-expanded="false">
+          <span class="ds-radio" aria-hidden="true"></span>
+          <div class="ds-tt">
+            <div class="ds-line1">
+              <strong class="ds-title">${d.title}</strong>
+              ${d.badge ? `<span class="ds-badge">${d.badge}</span>` : ``}
+            </div>
+            ${d.subtitle ? `<div class="ds-sub">${d.subtitle}</div>` : ``}
+          </div>
+          <div class="ds-price">
+            <span class="ds-total">—</span>
+            <s class="ds-compare"></s>
+          </div>
+        </button>
+        <div class="ds-body" hidden>
+          <div class="ds-note">Color, Size</div>
+          <div class="ds-units"></div>
+        </div>
+      `;
+
+      const unitsHolder = wrap.querySelector('.ds-units');
+
+      for(let i=0;i<d.units;i++){
+        const unit = document.createElement('div');
+        unit.className = 'ds-unit';
+        unit.dataset.index = i;
+        const title = document.createElement('div');
+        title.className = 'ds-unit__title';
+        title.textContent = `#${i+1}`;
+        unit.appendChild(title);
+
+        options.forEach((opt, oi)=>{
+          const label = document.createElement('label');
+          label.className = 'ds-label';
+          label.textContent = opt.name;
+          const sel = buildSelect(opt, oi);
+          unit.appendChild(label);
+          unit.appendChild(sel);
+        });
+
+        unitsHolder.appendChild(unit);
+      }
+      return wrap;
+    }
+
+    // Render all deals
+    const dealEls = [];
+    const toRender = dealsCfg.length ? dealsCfg : [
+      { title:"1 Pair", subtitle:"Standard Price", units:1, discount_type:"none", discount_value:0 },
+      { title:"2 Pairs", subtitle:"10% extra discount on the total order!", units:2, discount_type:"percent", discount_value:10, badge:"MOST POPULAR!" },
+      { title:"3 Pairs", subtitle:"15% extra discount on the total order!", units:3, discount_type:"percent", discount_value:15, badge:"BEST DEAL", open:true }
+    ];
+
+    toRender.forEach((deal, idx)=>{
+      const el = buildDeal(deal, idx);
+      dealsWrap.appendChild(el);
+      dealEls.push(el);
+    });
+
+    // Defaults: set selects to first available variant if possible
+    const firstAvailable = variants.find(v=>v.available) || variants[0];
+    if(firstAvailable){
+      dealEls.forEach(d=>{
+        d.querySelectorAll('.ds-unit').forEach(unit=>{
+          unit.querySelectorAll('.js-opt').forEach((sel, i)=>{
+            const val = firstAvailable.options[i];
+            if(val){
+              const op = Array.from(sel.options).find(o=>o.value == val);
+              if(op) sel.value = op.value;
+            }
+          });
+        });
+      });
+    }
+
+    function sumSelectedBasePrice(bodyEl){
+      const units = bodyEl.querySelectorAll('.ds-unit');
+      let sumPrice = 0, sumCompare = 0;
+      units.forEach(u=>{
+        const opts = Array.from(u.querySelectorAll('.js-opt'))
+          .sort((a,b)=> (+a.dataset.optIndex) - (+b.dataset.optIndex))
+          .map(s=>s.value);
+        const vid = findVariantIdFromOptions(opts);
+        const v = vid ? getVariantById(vid) : null;
+        if(v){
+          sumPrice += (v.price || 0);
+          const cap = v.compare_at_price && v.compare_at_price > v.price ? v.compare_at_price : (v.price || 0);
+          sumCompare += cap;
+        }
+      });
+      return {sumPrice, sumCompare};
+    }
+
+    function applyDiscount(sumPrice, type, val){
+      if(type === 'percent'){
+        return Math.max(0, Math.round(sumPrice * (100 - Number(val || 0)) / 100));
+      } else if(type === 'fixed'){
+        return Math.max(0, sumPrice - Math.round(Number(val || 0) * 100));
+      }
+      return sumPrice;
+    }
+
+    function updateDealPrices(dealEl){
+      const body = dealEl.querySelector('.ds-body');
+      const { sumPrice, sumCompare } = sumSelectedBasePrice(body);
+      const discType = dealEl.dataset.discountType;
+      const discVal = Number(dealEl.dataset.discount || 0);
+      const after = applyDiscount(sumPrice, discType, discVal);
+
+      const totalEl = dealEl.querySelector('.ds-total');
+      const cmpEl = dealEl.querySelector('.ds-compare');
+      totalEl.textContent = moneyFmt(after);
+      if(sumCompare > after){
+        cmpEl.textContent = moneyFmt(sumCompare);
+        cmpEl.style.display = '';
+      } else {
+        cmpEl.textContent = '';
+        cmpEl.style.display = 'none';
+      }
+    }
+
+    // Open/close logic
+    function openOnly(target){
+      dealEls.forEach(d=>{
+        const body = d.querySelector('.ds-body');
+        const head = d.querySelector('.ds-head');
+        if(d === target){
+          d.classList.add('is-open');
+          body.removeAttribute('hidden');
+          head.setAttribute('aria-expanded', 'true');
+        } else {
+          d.classList.remove('is-open');
+          body.setAttribute('hidden','');
+          head.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
+
+    // Attach listeners
+    dealEls.forEach(d=>{
+      d.querySelectorAll('.js-opt').forEach(sel=>{
+        sel.addEventListener('change', ()=> updateDealPrices(d));
+      });
+      d.querySelector('.ds-head').addEventListener('click', ()=>{
+        if(!d.classList.contains('is-open')) openOnly(d);
+        updateDealPrices(d);
+      });
+      updateDealPrices(d);
+    });
+
+    // Open default one
+    const defaultOpen = dealEls.find((_,i)=> !!(toRender[i] && toRender[i].open)) || dealEls[0];
+    if(defaultOpen) openOnly(defaultOpen);
+
+    // Add to cart
+    const addBtn = root.querySelector('[data-ds="add"]');
+    const errBox = root.querySelector('[data-ds="err"]');
+
+    async function addCurrentDeal(){
+      errBox.hidden = true; errBox.textContent = '';
+      const current = dealEls.find(d=> d.classList.contains('is-open')) || dealEls[0];
+      if(!current) return;
+
+      const title = current.querySelector('.ds-title')?.textContent?.trim() || 'Bundle';
+      const unitEls = current.querySelectorAll('.ds-unit');
+      const items = [];
+
+      for(let i=0;i<unitEls.length;i++){
+        const u = unitEls[i];
+        const opts = Array.from(u.querySelectorAll('.js-opt'))
+          .sort((a,b)=> (+a.dataset.optIndex) - (+b.dataset.optIndex))
+          .map(s=>s.value);
+        const vid = findVariantIdFromOptions(opts);
+        const v = vid ? getVariantById(vid) : null;
+        if(!vid){
+          errBox.hidden = false;
+          errBox.textContent = `Sorry, we couldn't find a variant for #${i+1}. Please change the selections.`;
+          return;
+        }
+        if(v && !v.available){
+          errBox.hidden = false;
+          errBox.textContent = `#${i+1} is out of stock for the selected options. Please choose another.`;
+          return;
+        }
+        items.push({
+          id: Number(vid), quantity: 1,
+          properties: { 'Bundle': title, 'Bundle ref': '{{ _root_id }}', 'Item #': `#${i+1}` }
+        });
+      }
+
+      addBtn.disabled = true; addBtn.classList.add('is-loading');
+      try{
+        const res = await fetch('/cart/add.js', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ items }) });
+        if(!res.ok) throw new Error('Add failed');
+        document.dispatchEvent(new CustomEvent('cart:refresh'));
+        if(redirectToCart) window.location.href = '/cart';
+      } catch(e){
+        errBox.hidden = false; errBox.textContent = 'Could not add to cart. Please try again.';
+      } finally {
+        addBtn.disabled = false; addBtn.classList.remove('is-loading');
+      }
+    }
+    addBtn.addEventListener('click', addCurrentDeal);
+  })();
+  </script>
+</div>

@@ -298,6 +298,19 @@
         {%- endcase -%}
       {%- endfor -%}
     {%- endform -%}
+    {% capture ds_cfg %}
+    {
+      "heading": "Bundle promotion is valid till 11:59 PM",
+      "button_label": "Add to cart",
+      "redirect_to_cart": true,
+      "deals": [
+        { "title":"1 Pair", "subtitle":"Standard Price", "units":1, "discount_type":"none", "discount_value":0 },
+        { "title":"2 Pairs", "subtitle":"10% extra discount on the total order!", "units":2, "discount_type":"percent", "discount_value":10, "badge":"MOST POPULAR!" },
+        { "title":"3 Pairs", "subtitle":"15% extra discount on the total order!", "units":3, "discount_type":"percent", "discount_value":15, "badge":"BEST DEAL", "open": true }
+      ]
+    }
+    {% endcapture %}
+    {% render 'deal-selector', product: product, config: ds_cfg %}
   </div>
 </div>
 
