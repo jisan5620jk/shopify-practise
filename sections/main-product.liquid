@@ -458,27 +458,29 @@
               {% for j in (1..i) %}
                 <div class="variant-row">
                   <label>#{{ j }}</label>
-                  {% for option in product.options_with_values %}
-                    <div class="product-option">
-                      <label for="option-{{ forloop.index0 }}">{{ option.name }}</label>
-                      <select
-                        id="option-{{ forloop.index0 }}"
-                        name="options[{{ option.name }}]"
-                        data-option-index="{{ forloop.index0 }}"
-                      >
-                        {% for value in option.values %}
-                          <option
-                            value="{{ value | escape }}"
-                            {% if value == option.selected_value %}
-                              selected
-                            {% endif %}
-                          >
-                            {{ value | escape }}
-                          </option>
-                        {% endfor %}
-                      </select>
-                    </div>
-                  {% endfor %}
+                  <div>
+                    {% for option in product.options_with_values %}
+                      <div class="product-option">
+                        <label for="option-{{ forloop.index0 }}">{{ option.name }}</label>
+                        <select
+                          id="option-{{ forloop.index0 }}"
+                          name="options[{{ option.name }}]"
+                          data-option-index="{{ forloop.index0 }}"
+                        >
+                          {% for value in option.values %}
+                            <option
+                              value="{{ value | escape }}"
+                              {% if value == option.selected_value %}
+                                selected
+                              {% endif %}
+                            >
+                              {{ value | escape }}
+                            </option>
+                          {% endfor %}
+                        </select>
+                      </div>
+                    {% endfor %}
+                  </div>
                 </div>
               {% endfor %}
             </div>
