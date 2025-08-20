@@ -354,5 +354,65 @@
         updateBundleAccordion(parseInt(e.target.value));
       });
     });
+
+    // =======================
+    // AJAX Add to Cart logic
+    // =======================
+    const addToCartBtn = document.querySelector('.add-to-cart');
+
+    addToCartBtn.addEventListener('click', function () {
+      addToCartBtn.disabled = true;
+      addToCartBtn.innerText = "Adding...";
+
+      // যেই bundle active আছে, সেইটা নাও
+      const activeBundle = document.querySelector('.bundle-option.active');
+      const qty = parseInt(activeBundle.dataset.tier);
+
+      let formData = {
+        items: []
+      };
+
+      // প্রতিটি variant-row থেকে সিলেক্টেড অপশন নিয়ে নাও
+      activeBundle.querySelectorAll('.variant-row').forEach((row) => {
+        let properties = {};
+        row.querySelectorAll('select').forEach((select) => {
+          properties[select.name] = select.value;
+        });
+
+        formData.items.push({
+          id: {{ product.variants.first.id }}, // এখানে ডিফল্ট variant id ব্যবহার করছি
+          quantity: 1,
+          properties: properties
+        });
+      });
+
+      fetch('/cart/add.js', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          console.log("Added to cart:", data);
+          addToCartBtn.innerText = "✔ Added!";
+          addToCartBtn.style.background = "#388e3c";
+
+          setTimeout(() => {
+            addToCartBtn.innerText = "🛒 Add to cart";
+            addToCartBtn.disabled = false;
+          }, 2000);
+
+          // চাইলে mini-cart বা cart drawer খুলতে পারো
+          // window.location.href = "/cart";
+        })
+        .catch((err) => {
+          console.error("Error:", err);
+          addToCartBtn.innerText = "Error!";
+          addToCartBtn.disabled = false;
+        });
+    });
   });
 </script>
