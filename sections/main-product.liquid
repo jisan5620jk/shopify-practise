@@ -224,12 +224,14 @@
             <div class="bundle-info">
               <div class="bundle-title-row">
                 <strong>{{ i }} Pair</strong>
-                {% if tag == 'most-popular' %}
+                {% assign clean_tag = tag | strip %}
+                {% if clean_tag == 'most-popular' %}
                   <span class="tag popular">MOST POPULAR!</span>
-                {% elsif tag == 'best-deal' %}
+                {% elsif clean_tag == 'best-deal' %}
                   <span class="tag best">BEST DEAL</span>
                 {% endif %}
               </div>
+
               <div class="bundle-subtitle">{{ label }}</div>
             </div>
             <div class="bundle-price">
