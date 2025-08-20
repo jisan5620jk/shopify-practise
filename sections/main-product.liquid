@@ -271,10 +271,19 @@
   }
 
   .product-option label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 600;
-    color: #333;
+    display: flex!important;
+    flex-direction: column;
+    justify-content: center;
+    align-items: initial;
+    position: relative;
+    box-sizing: border-box;
+    cursor: pointer;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background-color:#fff;
+    border-radius: 23;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .3);
   }
 
   .product-option select {
