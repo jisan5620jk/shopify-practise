@@ -207,6 +207,7 @@
         {% assign total_price = base_price | times: i %}
         {% assign discount_amount = total_price | times: discount %}
         {% assign discounted_price = total_price | minus: discount_amount %}
+        {% assign tags = 'none,most-popular,best-deal' | split: ',' %}
         {% assign tag = tags[i-1] %}
         {% assign label = labels[i-1] %}
 
