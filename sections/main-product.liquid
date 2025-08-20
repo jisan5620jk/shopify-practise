@@ -330,278 +330,286 @@
         </div>
       {% endfor %}
 
-      {% if request.page_type == 'product' %}
-        <script id="product-data" type="application/json">
-          {{ product | json }}
-        </script>
-      {% endif %}
-
       <button class="add-to-cart">🛒 Add to cart</button>
     </div>
   </div>
 </div>
 
+{% if request.page_type == 'product' %}
+  <script id="product-data" type="application/json">
+    {{ product | json }}
+  </script>
+{% endif %}
+
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
-    /* assets/bundle-accordion.js */
-    /* 
-  Bundle accordion logic for product page
-  - Active tier expand hobe, baki gulo collapse thakbe
+  /*
+  Bundle Accordion (Product Page)
+  - Select kora bundle tier expand hobe
+  - Baki gulo collapse thakbe
+  - Resize e height re-calc hobe
 */
+  (function () {
+    'use strict';
 
-    (function () {
-      'use strict';
+    // Active tier expand/collapse
+    function updateBundleAccordion(selectedTier) {
+      document.querySelectorAll('.bundle-option').forEach((option) => {
+        const tier = parseInt(option.dataset.tier);
+        const container = option.querySelector('.variant-selectors');
+        if (!container) return;
 
-      // Selected bundle tier-er variant section expand/collapse manage
-      function updateBundleAccordion(selectedTier) {
-        document.querySelectorAll('.bundle-option').forEach((option) => {
-          const tier = parseInt(option.dataset.tier);
-          const container = option.querySelector('.variant-selectors');
-          if (!container) return;
-
-          if (tier === selectedTier) {
-            option.classList.add('active');
-            // Expand: set to content height
-            container.style.maxHeight = container.scrollHeight + 'px';
-          } else {
-            option.classList.remove('active');
-            // Collapse
-            container.style.maxHeight = '0px';
-          }
-        });
-      }
-
-      function initAccordion() {
-        // Initial load: expand pre-selected radio
-        const defaultSelected = document.querySelector('input[name="bundle_option"]:checked');
-        if (defaultSelected) {
-          updateBundleAccordion(parseInt(defaultSelected.value));
+        if (tier === selectedTier) {
+          option.classList.add('active');
+          // Expand: content-er height onujayi max-height set
+          container.style.maxHeight = container.scrollHeight + 'px';
+        } else {
+          option.classList.remove('active');
+          // Collapse
+          container.style.maxHeight = '0px';
         }
+      });
+    }
 
-        // On change: expand selected, collapse others
-        document.querySelectorAll('input[name="bundle_option"]').forEach((radio) => {
-          radio.addEventListener('change', (e) => {
-            updateBundleAccordion(parseInt(e.target.value));
-          });
-        });
-
-        // Optional: on resize, recalc height of active container
-        window.addEventListener('resize', () => {
-          const active = document.querySelector('.bundle-option.active .variant-selectors');
-          if (active) active.style.maxHeight = active.scrollHeight + 'px';
-        });
+    function initAccordion() {
+      // Initial: pre-selected radio detect
+      const defaultSelected = document.querySelector('input[name="bundle_option"]:checked');
+      if (defaultSelected) {
+        updateBundleAccordion(parseInt(defaultSelected.value));
       }
 
-      document.addEventListener('DOMContentLoaded', initAccordion);
-    })();
+      // Change e update
+      document.querySelectorAll('input[name="bundle_option"]').forEach((radio) => {
+        radio.addEventListener('change', (e) => {
+          updateBundleAccordion(parseInt(e.target.value));
+        });
+      });
 
-    /* assets/bundle-ajax-cart.js */
-    /*
-  AJAX add-to-cart for product page bundle selector
-  - Active bundle-er proti row theke option values collect
+      // Resize e active container-er height re-calc
+      window.addEventListener('resize', () => {
+        const active = document.querySelector('.bundle-option.active .variant-selectors');
+        if (active) active.style.maxHeight = active.scrollHeight + 'px';
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', initAccordion);
+  })();
+</script>
+
+<script>
+  /*
+  Bundle AJAX Add to Cart (Product Page)
+  - Active bundle-er proti row theke option values collect kora
   - Correct variant id match kore
-  - Ekbar-e multiple line items POST -> /cart/add.js
+  - Ekbar-e /cart/add.js e multiple line items add
+  - Cart count update (optional)
 */
+  (function () {
+    'use strict';
 
-    (function () {
-      'use strict';
+    // Simple toast (theme jodi snackbar/drawer thake, replace kore niben)
+    function toast(msg) {
+      alert(msg);
+    }
 
-      // Toast helper (replace with theme drawer/snackbar if needed)
-      function toast(msg) {
-        // Example: replace alert with your theme's UI feedback
-        alert(msg);
-      }
-
-      // Try to get product JSON from inline script
-      function getInlineProductData() {
-        try {
-          const el = document.getElementById('product-data');
-          return el ? JSON.parse(el.textContent) : null;
-        } catch (e) {
-          console.warn('Product JSON parse error', e);
-          return null;
-        }
-      }
-
-      // Optional fallback: fetch product JSON from URL if not embedded
-      async function fetchProductDataFromHandle() {
-        try {
-          const parts = window.location.pathname.split('/').filter(Boolean);
-          // Expecting /products/{handle}
-          const idx = parts.indexOf('products');
-          if (idx === -1 || !parts[idx + 1]) return null;
-          const handle = parts[idx + 1];
-          const res = await fetch('/products/' + handle + '.js');
-          if (!res.ok) return null;
-          return await res.json();
-        } catch (e) {
-          console.warn('Product JSON fetch failed', e);
-          return null;
-        }
-      }
-
-      // Ensure product data available (inline first, else fetch)
-      let productDataCache = null;
-      async function ensureProductData() {
-        if (productDataCache) return productDataCache;
-
-        const inline = getInlineProductData();
-        if (inline) {
-          productDataCache = inline;
-          return productDataCache;
-        }
-
-        // Fallback fetch
-        const fetched = await fetchProductDataFromHandle();
-        if (fetched) {
-          productDataCache = fetched;
-          return productDataCache;
-        }
-
+    // Product JSON (inline theke)
+    function getInlineProductData() {
+      try {
+        const el = document.getElementById('product-data');
+        return el ? JSON.parse(el.textContent) : null;
+      } catch (e) {
+        console.warn('Product JSON parse error', e);
         return null;
       }
+    }
 
-      // optionValues -> exact variant match (order: option1, option2, option3)
-      function findVariantByOptions(productData, optionValues) {
-        if (!productData || !Array.isArray(productData.variants)) return null;
-        return (
-          productData.variants.find((v) => {
-            for (let i = 0; i < optionValues.length; i++) {
-              if ((v['option' + (i + 1)] || '') !== optionValues[i]) return false;
-            }
-            return true;
-          }) || null
-        );
+    // Fallback: URL theke product JSON fetch (jodi inline miss hoy)
+    async function fetchProductDataFromHandle() {
+      try {
+        const parts = window.location.pathname.split('/').filter(Boolean);
+        const idx = parts.indexOf('products');
+        if (idx === -1 || !parts[idx + 1]) return null;
+        const handle = parts[idx + 1];
+        const res = await fetch('/products/' + handle + '.js');
+        if (!res.ok) return null;
+        return await res.json();
+      } catch (e) {
+        console.warn('Product JSON fetch failed', e);
+        return null;
       }
+    }
 
-      // Active bundle element
-      function getActiveBundle() {
-        return document.querySelector('.bundle-option.active');
+    // Ensure product data (inline priority)
+    let productDataCache = null;
+    async function ensureProductData() {
+      if (productDataCache) return productDataCache;
+
+      const inline = getInlineProductData();
+      if (inline) {
+        productDataCache = inline;
+        return productDataCache;
       }
-
-      // Protita row-er moddhe thaka select gulor value collect (sorted by data-option-index)
-      function getOptionValuesFromRow(rowEl) {
-        const selects = rowEl.querySelectorAll('select[data-option-index]');
-        const ordered = Array.from(selects).sort((a, b) => {
-          return parseInt(a.dataset.optionIndex) - parseInt(b.dataset.optionIndex);
-        });
-        return ordered.map((s) => s.value);
+      const fetched = await fetchProductDataFromHandle();
+      if (fetched) {
+        productDataCache = fetched;
+        return productDataCache;
       }
+      return null;
+    }
 
-      // Active bundle theke cart items build
-      function buildItemsFromActiveBundle(productData) {
-        const activeBundle = getActiveBundle();
-        if (!activeBundle) throw new Error('Please select a bundle first.');
-
-        const tier = parseInt(activeBundle.dataset.tier);
-        const rows = activeBundle.querySelectorAll('.variant-row');
-        if (!rows.length) throw new Error('No variant rows found for the selected bundle.');
-
-        const items = [];
-
-        rows.forEach((rowEl, idx) => {
-          const optionValues = getOptionValuesFromRow(rowEl);
-          if (!optionValues.length) {
-            throw new Error('Please select options for row #' + (idx + 1));
+    // option values -> variant match (order must be option1, option2, option3)
+    function findVariantByOptions(productData, optionValues) {
+      if (!productData || !Array.isArray(productData.variants)) return null;
+      return (
+        productData.variants.find((v) => {
+          for (let i = 0; i < optionValues.length; i++) {
+            if ((v['option' + (i + 1)] || '') !== optionValues[i]) return false;
           }
+          return true;
+        }) || null
+      );
+    }
 
-          const variant = findVariantByOptions(productData, optionValues);
-          if (!variant) {
-            throw new Error('No matching variant found for row #' + (idx + 1));
-          }
-          if (!variant.available) {
+    // Active bundle wrapper
+    function getActiveBundle() {
+      return document.querySelector('.bundle-option.active');
+    }
+
+    // Row theke ordered option values (data-option-index onujayi sort)
+    function getOptionValuesFromRow(rowEl) {
+      const selects = rowEl.querySelectorAll('select[data-option-index]');
+      const ordered = Array.from(selects).sort((a, b) => {
+        return parseInt(a.dataset.optionIndex) - parseInt(b.dataset.optionIndex);
+      });
+      return ordered.map((s) => s.value);
+    }
+
+    // Active bundle theke items build
+    function buildItemsFromActiveBundle(productData) {
+      const activeBundle = getActiveBundle();
+      if (!activeBundle) throw new Error('Please select a bundle first.');
+
+      const tier = parseInt(activeBundle.dataset.tier);
+      const rows = activeBundle.querySelectorAll('.variant-row');
+      if (!rows.length) throw new Error('No variant rows found for the selected bundle.');
+
+      const items = [];
+
+      rows.forEach((rowEl, idx) => {
+        const optionValues = getOptionValuesFromRow(rowEl);
+
+        // Fallback: jodi kono option nai (single-variant product), first variant use
+        if (!optionValues.length && productData.variants && productData.variants.length === 1) {
+          const onlyVariant = productData.variants[0];
+          if (!onlyVariant.available) {
             throw new Error('Selected variant for row #' + (idx + 1) + ' is out of stock.');
           }
-
           items.push({
-            id: variant.id,
+            id: onlyVariant.id,
             quantity: 1,
-            // NOTE:
-            // - Niche properties add korle Shopify identical line items merge korbena.
-            // - Jodi same variant duita row-e select korle merge korte chan, 'Row' property remove kore din.
             properties: {
               Bundle: tier + ' Pair Bundle',
               Row: '#' + (idx + 1),
             },
           });
-        });
+          return;
+        }
 
-        return items;
-      }
+        if (!optionValues.length) {
+          throw new Error('Please select options for row #' + (idx + 1));
+        }
 
-      // POST to /cart/add.js with multiple items
-      async function addItemsToCart(items) {
-        const res = await fetch('/cart/add.js', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
+        const variant = findVariantByOptions(productData, optionValues);
+        if (!variant) {
+          throw new Error('No matching variant found for row #' + (idx + 1));
+        }
+        if (!variant.available) {
+          throw new Error('Selected variant for row #' + (idx + 1) + ' is out of stock.');
+        }
+
+        items.push({
+          id: variant.id,
+          quantity: 1,
+          // NOTE: Ekhane properties use koray identical line items merge hobena.
+          // Jodi same variant duita row-e select korle merge korte chan, Row property remove kore din.
+          properties: {
+            Bundle: tier + ' Pair Bundle',
+            Row: '#' + (idx + 1),
           },
-          body: JSON.stringify({ items }),
         });
+      });
 
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(err?.description || 'Failed to add to cart.');
-        }
+      return items;
+    }
 
-        return res.json();
+    // POST multiple line items to cart
+    async function addItemsToCart(items) {
+      const res = await fetch('/cart/add.js', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({ items }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.description || 'Failed to add to cart.');
       }
 
-      // Optional: cart bubble update (if #cart-count exists)
-      async function updateCartCount() {
+      return res.json();
+    }
+
+    // Optional: cart count update (if #cart-count exists)
+    async function updateCartCount() {
+      try {
+        const cart = await fetch('/cart.js').then((r) => r.json());
+        const el = document.querySelector('#cart-count');
+        if (el) el.textContent = cart.item_count;
+      } catch (e) {
+        console.warn('Cart count update failed', e);
+      }
+    }
+
+    function initAddToCart() {
+      const btn = document.querySelector('.add-to-cart');
+      if (!btn) return;
+
+      btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+
+        // Button state
+        const oldText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Adding...';
+
         try {
-          const cart = await fetch('/cart.js').then((r) => r.json());
-          const el = document.querySelector('#cart-count');
-          if (el) el.textContent = cart.item_count;
-        } catch (e) {
-          console.warn('Cart count update failed', e);
+          // Ensure product data
+          const productData = await ensureProductData();
+          if (!productData) throw new Error('Product data not found. Please include the product JSON.');
+
+          // Build items from current selections
+          const items = buildItemsFromActiveBundle(productData);
+
+          // Add to cart via AJAX
+          await addItemsToCart(items);
+
+          // Optional: update count / open mini cart
+          await updateCartCount();
+          // Example (theme specific):
+          // if (window.ThemeCart && typeof window.ThemeCart.open === 'function') window.ThemeCart.open();
+
+          toast('Bundle added to cart 🎉');
+        } catch (err) {
+          console.error(err);
+          toast(err.message || 'Something went wrong. Please try again.');
+        } finally {
+          btn.disabled = false;
+          btn.textContent = oldText;
         }
-      }
+      });
+    }
 
-      function initAddToCart() {
-        const btn = document.querySelector('.add-to-cart');
-        if (!btn) return;
-
-        btn.addEventListener('click', async (e) => {
-          e.preventDefault();
-
-          // Button state
-          const oldText = btn.textContent;
-          btn.disabled = true;
-          btn.textContent = 'Adding...';
-
-          try {
-            // Ensure product data available
-            const productData = await ensureProductData();
-            if (!productData) {
-              throw new Error('Product data not found. Please include the product JSON.');
-            }
-
-            // Build items from current selections
-            const items = buildItemsFromActiveBundle(productData);
-
-            // Add to cart via AJAX
-            await addItemsToCart(items);
-
-            // Optional: update cart bubble / open mini cart
-            await updateCartCount();
-            // Example: if theme has drawer
-            // if (window.ThemeCart && typeof window.ThemeCart.open === 'function') { window.ThemeCart.open(); }
-
-            toast('Bundle added to cart 🎉');
-          } catch (err) {
-            console.error(err);
-            toast(err.message || 'Something went wrong. Please try again.');
-          } finally {
-            // Reset button
-            btn.disabled = false;
-            btn.textContent = oldText;
-          }
-        });
-      }
-
-      document.addEventListener('DOMContentLoaded', initAddToCart);
-    })();
-  });
+    document.addEventListener('DOMContentLoaded', initAddToCart);
+  })();
 </script>
