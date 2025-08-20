@@ -232,6 +232,21 @@
     align-items: center;
     cursor: pointer;
   }
+  .bundle-header .custom-radio {
+    display: flex;
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    border: 3px solid #fff;
+    box-sizing: border-box;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, .3);
+  }
+  .bundle-option.active .bundle-header .custom-radio {
+    background: #000;
+    box-shadow: 0 0 0 2px #000;
+  }
   .bundle-info {
     flex-grow: 1;
     margin-left: 1rem;
@@ -476,6 +491,7 @@
                 checked
               {% endif %}
             >
+            <div class="custom-radio"></div>
             <div class="bundle-info">
               <div class="bundle-title-row">
                 <strong>{{ i }} Pair</strong>
