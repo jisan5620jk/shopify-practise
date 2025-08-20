@@ -298,19 +298,64 @@
         {%- endcase -%}
       {%- endfor -%}
     {%- endform -%}
-    {% capture ds_cfg %}
-    {
-      "heading": "Bundle promotion is valid till 11:59 PM",
-      "button_label": "Add to cart",
-      "redirect_to_cart": true,
-      "deals": [
-        { "title":"1 Pair", "subtitle":"Standard Price", "units":1, "discount_type":"none", "discount_value":0 },
-        { "title":"2 Pairs", "subtitle":"10% extra discount on the total order!", "units":2, "discount_type":"percent", "discount_value":10, "badge":"MOST POPULAR!" },
-        { "title":"3 Pairs", "subtitle":"15% extra discount on the total order!", "units":3, "discount_type":"percent", "discount_value":15, "badge":"BEST DEAL", "open": true }
-      ]
-    }
-    {% endcapture %}
-    {% render 'deal-selector', product: product, config: ds_cfg %}
+    <div class="bundle-selector">
+      <h3>- Bundle promotion is valid till 11:59 PM -</h3>
+
+      {% assign base_price = product.price %}
+      {% assign compare_price = product.compare_at_price %}
+
+      {% assign bundle_discounts = '0,0.10,0.15' | split: ',' %}
+
+      {% for i in (1..3) %}
+        {% assign discount = bundle_discounts[i-1] | times: 1.0 %}
+        {% assign discounted_price = base_price | times: 1.0 | minus: base_price | times: discount %}
+
+        <div
+          class="bundle-tier"
+          data-tier="{{ i }}"
+          {% if i != 3 %}
+            style="display:none"
+          {% endif %}
+        >
+          <label>
+            <input
+              type="radio"
+              name="bundle_option"
+              value="{{ i }}"
+              {% if i == 3 %}
+                checked
+              {% endif %}
+            >
+            <strong>
+              {{- i }} Pair{% if i > 1 %}s{% endif -%}
+            </strong>
+            {% if i == 2 -%}
+              <span class="tag popular">MOST POPULAR!</span>
+            {%- endif %}
+            {% if i == 3 -%}
+              <span class="tag best">BEST DEAL</span>
+            {%- endif %}
+            <span class="price">Tk {{ discounted_price | money }}</span>
+            <span class="compare">Tk {{ compare_price | money }}</span>
+          </label>
+
+          <div class="variant-selectors">
+            {% for j in (1..i) %}
+              <div class="variant-selector">
+                <label>Color, Size #{{ j }}</label>
+                <select name="variant_{{ j }}">
+                  {% for variant in product.variants %}
+                    <option value="{{ variant.id }}">{{ variant.title }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
+
+      <button class="add-to-cart">🛒 Add to cart</button>
+    </div>
   </div>
 </div>
 
@@ -561,6 +606,37 @@
           hiddenInput.value = item.dataset.value;
         });
       });
+    });
+  });
+
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('input[name="bundle_option"]').forEach((radio) => {
+      radio.addEventListener('change', (e) => {
+        const selectedTier = parseInt(e.target.value);
+        document.querySelectorAll('.bundle-tier').forEach((tier) => {
+          tier.style.display = parseInt(tier.dataset.tier) === selectedTier ? 'block' : 'none';
+        });
+      });
+    });
+
+    document.querySelector('.add-to-cart').addEventListener('click', () => {
+      const selectedTier = parseInt(document.querySelector('input[name="bundle_option"]:checked').value);
+      const variantIds = [];
+
+      for (let i = 1; i <= selectedTier; i++) {
+        const select = document.querySelector(`select[name="variant_${i}"]`);
+        if (select && select.value) variantIds.push(select.value);
+      }
+
+      variantIds.forEach((id) => {
+        fetch('/cart/add.js', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ quantity: 1, id }),
+        });
+      });
+
+      alert('Bundle added to cart!');
     });
   });
 </script>
