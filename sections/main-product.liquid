@@ -200,15 +200,12 @@
       {% assign labels = 'Standard Price,10% extra discount on the total order!,15% extra discount on the total order!'
         | split: ','
       %}
-      {% assign tags = 'none,most-popular,best-deal' | split: ',' %}
 
       {% for i in (1..3) %}
         {% assign discount = discounts[i-1] | times: 1.0 %}
         {% assign total_price = base_price | times: i %}
         {% assign discount_amount = total_price | times: discount %}
         {% assign discounted_price = total_price | minus: discount_amount %}
-        {% assign tags = 'none,most-popular,best-deal' | split: ',' %}
-        {% assign tag = tags[i-1] %}
         {% assign label = labels[i-1] %}
 
         <div class="bundle-option {% if i == 1 %}active{% endif %}" data-tier="{{ i }}">
@@ -222,19 +219,19 @@
               {% endif %}
             >
             <div class="custom-radio"></div>
+
             <div class="bundle-info">
               <div class="bundle-title-row">
                 <strong>{{ i }} Pair</strong>
-                {% assign clean_tag = tag | strip %}
-                {% if clean_tag == 'most-popular' %}
+                {% if i == 2 %}
                   <span class="tag popular">MOST POPULAR!</span>
-                {% elsif clean_tag == 'best-deal' %}
+                {% elsif i == 3 %}
                   <span class="tag best">BEST DEAL</span>
                 {% endif %}
               </div>
-
               <div class="bundle-subtitle">{{ label }}</div>
             </div>
+
             <div class="bundle-price">
               <span class="price">Tk {{ discounted_price | money }}</span>
               <span class="compare">Tk {{ compare_price | times: i | money }}</span>
