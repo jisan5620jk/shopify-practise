@@ -700,22 +700,31 @@
   });
 
   document.addEventListener('DOMContentLoaded', function () {
+    function updateBundleAccordion(selectedTier) {
+      document.querySelectorAll('.bundle-option').forEach((option) => {
+        const tier = parseInt(option.dataset.tier);
+        const container = option.querySelector('.variant-selectors');
+
+        if (tier === selectedTier) {
+          option.classList.add('active');
+          container.style.maxHeight = container.scrollHeight + 'px';
+        } else {
+          option.classList.remove('active');
+          container.style.maxHeight = '0px';
+        }
+      });
+    }
+
+    // Initial load: expand the pre-selected tier
+    const defaultSelected = document.querySelector('input[name="bundle_option"]:checked');
+    if (defaultSelected) {
+      updateBundleAccordion(parseInt(defaultSelected.value));
+    }
+
+    // On change: update accordion
     document.querySelectorAll('input[name="bundle_option"]').forEach((radio) => {
       radio.addEventListener('change', (e) => {
-        const selectedTier = parseInt(e.target.value);
-
-        document.querySelectorAll('.bundle-option').forEach((option) => {
-          const tier = parseInt(option.dataset.tier);
-          const container = option.querySelector('.variant-selectors');
-
-          if (tier === selectedTier) {
-            option.classList.add('active');
-            container.style.maxHeight = container.scrollHeight + 'px';
-          } else {
-            option.classList.remove('active');
-            container.style.maxHeight = '0px';
-          }
-        });
+        updateBundleAccordion(parseInt(e.target.value));
       });
     });
   });
