@@ -94,6 +94,11 @@
       color: #999;
       font-size: 0.875rem;
     }
+    .popular-wrapper {
+      position:absolute;
+      top: -4px;
+      right: 30px;
+    }
     .tag {
       font-size: 0.75rem;
       padding: 0.2rem 0.5rem;
@@ -128,12 +133,12 @@
   }
 
   .tag.popular:before {
-      left: 0;
+      left: -8px;
       border-left: 8px solid transparent
   }
 
   .tag.popular:after {
-      right: 0;
+      right: -8px;
       border-right: 8px solid transparent
   }
     .tag.best {
@@ -264,12 +269,18 @@
             <div class="bundle-info">
               <div class="bundle-title-row">
                 <strong>{{ i }} Pair</strong>
+
                 {% if i == 2 %}
-                  <span class="tag popular">MOST POPULAR!</span>
+                  <div class="tag-wrapper popular-wrapper">
+                    <span class="tag popular">MOST POPULAR!</span>
+                  </div>
                 {% elsif i == 3 %}
-                  <span class="tag best">BEST DEAL</span>
+                  <div class="tag-wrapper best-wrapper">
+                    <span class="tag best">BEST DEAL</span>
+                  </div>
                 {% endif %}
               </div>
+
               <div class="bundle-subtitle">{{ label }}</div>
             </div>
 
