@@ -366,6 +366,11 @@
     });
 
     // =======================
+    // Variants JSON (from Liquid)
+    // =======================
+    const allVariants = {{ product.variants | json }};
+
+    // =======================
     // AJAX Add to Cart logic
     // =======================
     const addToCartBtn = document.querySelector('.add-to-cart');
@@ -374,27 +379,38 @@
       addToCartBtn.disabled = true;
       addToCartBtn.innerText = "Adding...";
 
-      // যেই bundle active আছে, সেইটা নাও
       const activeBundle = document.querySelector('.bundle-option.active');
-      const qty = parseInt(activeBundle.dataset.tier);
 
-      let formData = {
-        items: []
-      };
+      let formData = { items: [] };
 
-      // প্রতিটি variant-row থেকে সিলেক্টেড অপশন নিয়ে নাও
+      // প্রতিটি variant-row থেকে সিলেক্টেড অপশন নিয়ে variant খুঁজবো
       activeBundle.querySelectorAll('.variant-row').forEach((row) => {
-        let properties = {};
+        let selectedOptions = [];
+
         row.querySelectorAll('select').forEach((select) => {
-          properties[select.name] = select.value;
+          selectedOptions.push(select.value);
         });
 
-        formData.items.push({
-          id: {{ product.variants.first.id }}, // এখানে ডিফল্ট variant id ব্যবহার করছি
-          quantity: 1,
-          properties: properties
+        // === Variant match করানো ===
+        let matchedVariant = allVariants.find((variant) => {
+          return JSON.stringify(variant.options) === JSON.stringify(selectedOptions);
         });
+
+        if (matchedVariant) {
+          formData.items.push({
+            id: matchedVariant.id,
+            quantity: 1
+          });
+        }
       });
+
+      // যদি কিছু না মেলে
+      if (formData.items.length === 0) {
+        alert("Please select product options.");
+        addToCartBtn.disabled = false;
+        addToCartBtn.innerText = "🛒 Add to cart";
+        return;
+      }
 
       fetch('/cart/add.js', {
         method: 'POST',
@@ -415,7 +431,7 @@
             addToCartBtn.disabled = false;
           }, 2000);
 
-          // চাইলে mini-cart বা cart drawer খুলতে পারো
+          // চাইলে mini cart drawer open করতে পারো
           // window.location.href = "/cart";
         })
         .catch((err) => {
