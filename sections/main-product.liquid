@@ -428,16 +428,18 @@
           </label>
 
           <div class="variant-selectors">
-            {% for j in (1..i) %}
-              <div class="variant-row">
-                <label>#{{ j }}</label>
-                <select name="variant_{{ j }}">
-                  {% for variant in product.variants %}
-                    <option value="{{ variant.id }}">{{ variant.title }}</option>
-                  {% endfor %}
-                </select>
-              </div>
-            {% endfor %}
+            <div class="variant-inner">
+              {% for j in (1..i) %}
+                <div class="variant-row">
+                  <label>#{{ j }}</label>
+                  <select name="variant_{{ j }}">
+                    {% for variant in product.variants %}
+                      <option value="{{ variant.id }}">{{ variant.title }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              {% endfor %}
+            </div>
           </div>
         </div>
       {% endfor %}
