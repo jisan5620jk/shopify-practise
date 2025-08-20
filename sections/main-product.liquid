@@ -235,190 +235,373 @@
     }
 {%- endstyle -%}
 
-<div class="variant-selectors">
-  <div class="variant-inner">
-    {% for j in (1..i) %}
-      <div class="variant-row" data-row="{{ j }}" data-tier="{{ i }}">
-        <label>#{{ j }}</label>
-        <div>
-          {% for option in product.options_with_values %}
-            <div class="product-option">
-              <label for="option-{{ i }}-{{ j }}-{{ forloop.index0 }}">{{ option.name }}</label>
-              <select
-                id="option-{{ i }}-{{ j }}-{{ forloop.index0 }}"
-                class="option-select"
-                name="row-{{ j }}-option-{{ forloop.index0 }}"
-                data-tier="{{ i }}"
-                data-row="{{ j }}"
-                data-option-index="{{ forloop.index0 }}"
-                data-option-position="{{ forloop.index0 | plus: 1 }}"
-                data-option-name="{{ option.name | escape }}"
-              >
-                {% for value in option.values %}
-                  <option
-                    value="{{ value | escape }}"
-                    {% if value == option.selected_value %}
-                      selected
-                    {% endif %}
-                  >
-                    {{ value | escape }}
-                  </option>
-                {% endfor %}
-              </select>
+<div class="product-section">
+  <div class="product-image">
+    <div class="main-image">
+      <img id="currentImage" src="{{ product.featured_image | img_url: 'master' }}" alt="{{ product.title }}">
+    </div>
+  </div>
+  <div class="product-content">
+    <div class="bundle-selector">
+      <h3 class="bundle-title">- Bundle promotion is valid till 11:59 PM -</h3>
+
+      {% assign base_price = product.price %}
+      {% assign compare_price = product.compare_at_price %}
+      {% assign discounts = '0,0.10,0.15' | split: ',' %}
+      {% assign labels = 'Standard Price,10% extra discount on the total order!,15% extra discount on the total order!'
+        | split: ','
+      %}
+
+      {% for i in (1..3) %}
+        {% assign discount = discounts[i-1] | times: 1.0 %}
+        {% assign total_price = base_price | times: i %}
+        {% assign discount_amount = total_price | times: discount %}
+        {% assign discounted_price = total_price | minus: discount_amount %}
+        {% assign label = labels[i-1] %}
+
+        <div class="bundle-option {% if i == 1 %}active{% endif %}" data-tier="{{ i }}">
+          <label class="bundle-header">
+            <input
+              type="radio"
+              name="bundle_option"
+              value="{{ i }}"
+              {% if i == 1 %}
+                checked
+              {% endif %}
+            >
+            <div class="custom-radio"></div>
+
+            <div class="bundle-info">
+              <div class="bundle-title-row">
+                <strong>{{ i }} Pair</strong>
+
+                {% if i == 2 %}
+                  <div class="tag-wrapper popular-wrapper">
+                    <span class="tag popular">MOST POPULAR!</span>
+                  </div>
+                {% elsif i == 3 %}
+                  <div class="tag-wrapper best-wrapper">
+                    <span class="tag best">BEST DEAL</span>
+                  </div>
+                {% endif %}
+              </div>
+
+              <div class="bundle-subtitle">{{ label }}</div>
             </div>
-          {% endfor %}
+
+            <div class="bundle-price">
+              <span class="price">Tk {{ discounted_price | money }}</span>
+              <span class="compare">Tk {{ compare_price | times: i | money }}</span>
+            </div>
+          </label>
+
+          <div class="variant-selectors">
+            <div class="variant-inner">
+              {% for j in (1..i) %}
+                <div class="variant-row">
+                  <label>#{{ j }}</label>
+                  <div>
+                    {% for option in product.options_with_values %}
+                      <div class="product-option">
+                        <label for="option-{{ forloop.index0 }}">{{ option.name }}</label>
+                        <select
+                          id="option-{{ forloop.index0 }}"
+                          name="options[{{ option.name }}]"
+                          data-option-index="{{ forloop.index0 }}"
+                        >
+                          {% for value in option.values %}
+                            <option
+                              value="{{ value | escape }}"
+                              {% if value == option.selected_value %}
+                                selected
+                              {% endif %}
+                            >
+                              {{ value | escape }}
+                            </option>
+                          {% endfor %}
+                        </select>
+                      </div>
+                    {% endfor %}
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
         </div>
-      </div>
-    {% endfor %}
+      {% endfor %}
+
+      {% if request.page_type == 'product' %}
+        <script id="product-data" type="application/json">
+          {{ product | json }}
+        </script>
+      {% endif %}
+
+      <button class="add-to-cart">🛒 Add to cart</button>
+    </div>
   </div>
 </div>
 
 <script>
   document.addEventListener('DOMContentLoaded', function () {
-    // ---------- Accordion (apnar existing logic) ----------
-    function updateBundleAccordion(selectedTier) {
-      document.querySelectorAll('.bundle-option').forEach((option) => {
-        const tier = parseInt(option.dataset.tier);
-        const container = option.querySelector('.variant-selectors');
+    /* assets/bundle-accordion.js */
+    /* 
+  Bundle accordion logic for product page
+  - Active tier expand hobe, baki gulo collapse thakbe
+*/
 
-        if (tier === selectedTier) {
-          option.classList.add('active');
-          container.style.maxHeight = container.scrollHeight + 'px';
-        } else {
-          option.classList.remove('active');
-          container.style.maxHeight = '0px';
-        }
-      });
-    }
+    (function () {
+      'use strict';
 
-    const defaultSelected = document.querySelector('input[name="bundle_option"]:checked');
-    if (defaultSelected) {
-      updateBundleAccordion(parseInt(defaultSelected.value));
-    }
-    document.querySelectorAll('input[name="bundle_option"]').forEach((radio) => {
-      radio.addEventListener('change', (e) => {
-        updateBundleAccordion(parseInt(e.target.value));
-      });
-    });
+      // Selected bundle tier-er variant section expand/collapse manage
+      function updateBundleAccordion(selectedTier) {
+        document.querySelectorAll('.bundle-option').forEach((option) => {
+          const tier = parseInt(option.dataset.tier);
+          const container = option.querySelector('.variant-selectors');
+          if (!container) return;
 
-    // ---------- Product JSON ----------
-    const productDataEl = document.getElementById('product-data');
-    const productData = productDataEl ? JSON.parse(productDataEl.textContent) : null;
-
-    // Safeguard
-    if (!productData) {
-      console.warn('Product JSON missing; AJAX add to cart will not work.');
-      return;
-    }
-
-    // ---------- Helpers ----------
-    function findVariantIdByOptions(optionValues) {
-      // optionValues: array ordered by option index (0..n-1)
-      const variant = productData.variants.find((v) => {
-        for (let i = 0; i < optionValues.length; i++) {
-          const key = 'option' + (i + 1);
-          if ((v[key] || '') !== optionValues[i]) return false;
-        }
-        return true;
-      });
-      if (!variant) return null;
-      if (!variant.available) return 'out-of-stock';
-      return variant.id;
-    }
-
-    function collectItemsFromActiveBundle() {
-      const activeBundle = document.querySelector('.bundle-option.active');
-      if (!activeBundle) throw new Error('Please select a bundle.');
-
-      const tier = parseInt(activeBundle.dataset.tier);
-      const items = [];
-
-      for (let row = 1; row <= tier; row++) {
-        // collect selects for this row
-        const selects = activeBundle.querySelectorAll('.option-select[data-row="' + row + '"]');
-        if (!selects.length) {
-          throw new Error('Options missing for row #' + row);
-        }
-
-        // sort by option index to keep order option1, option2, option3
-        const values = Array.from(selects)
-          .sort((a, b) => parseInt(a.dataset.optionIndex) - parseInt(b.dataset.optionIndex))
-          .map((s) => s.value);
-
-        const variantId = findVariantIdByOptions(values);
-
-        if (variantId === 'out-of-stock') {
-          throw new Error('Selected variant for row #' + row + ' is out of stock.');
-        }
-        if (!variantId) {
-          throw new Error('No matching variant found for row #' + row + '. Please adjust options.');
-        }
-
-        items.push({
-          id: variantId,
-          quantity: 1,
-          properties: {
-            Bundle: tier + ' Pair Bundle',
-            Row: '#' + row,
-          },
+          if (tier === selectedTier) {
+            option.classList.add('active');
+            // Expand: set to content height
+            container.style.maxHeight = container.scrollHeight + 'px';
+          } else {
+            option.classList.remove('active');
+            // Collapse
+            container.style.maxHeight = '0px';
+          }
         });
       }
 
-      return items;
-    }
+      function initAccordion() {
+        // Initial load: expand pre-selected radio
+        const defaultSelected = document.querySelector('input[name="bundle_option"]:checked');
+        if (defaultSelected) {
+          updateBundleAccordion(parseInt(defaultSelected.value));
+        }
 
-    function toast(msg) {
-      // Replace with your theme's toast/snackbar if available
-      alert(msg);
-    }
-
-    async function updateCartCount() {
-      try {
-        const cart = await fetch('/cart.js').then((r) => r.json());
-        const countEl = document.querySelector('#cart-count');
-        if (countEl) countEl.textContent = cart.item_count;
-      } catch (e) {
-        console.warn('Cart count update failed', e);
-      }
-    }
-
-    // ---------- Add to cart handler ----------
-    const addBtn = document.querySelector('.add-to-cart');
-    if (addBtn) {
-      addBtn.addEventListener('click', async (e) => {
-        e.preventDefault();
-        const btn = e.currentTarget;
-        btn.disabled = true;
-        const oldText = btn.textContent;
-        btn.textContent = 'Adding...';
-
-        try {
-          const items = collectItemsFromActiveBundle();
-
-          const res = await fetch('/cart/add.js', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Accept: 'application/json',
-            },
-            body: JSON.stringify({ items }),
+        // On change: expand selected, collapse others
+        document.querySelectorAll('input[name="bundle_option"]').forEach((radio) => {
+          radio.addEventListener('change', (e) => {
+            updateBundleAccordion(parseInt(e.target.value));
           });
+        });
 
-          if (!res.ok) {
-            const err = await res.json().catch(() => ({}));
-            throw new Error(err?.description || 'Failed to add to cart.');
+        // Optional: on resize, recalc height of active container
+        window.addEventListener('resize', () => {
+          const active = document.querySelector('.bundle-option.active .variant-selectors');
+          if (active) active.style.maxHeight = active.scrollHeight + 'px';
+        });
+      }
+
+      document.addEventListener('DOMContentLoaded', initAccordion);
+    })();
+
+    /* assets/bundle-ajax-cart.js */
+    /*
+  AJAX add-to-cart for product page bundle selector
+  - Active bundle-er proti row theke option values collect
+  - Correct variant id match kore
+  - Ekbar-e multiple line items POST -> /cart/add.js
+*/
+
+    (function () {
+      'use strict';
+
+      // Toast helper (replace with theme drawer/snackbar if needed)
+      function toast(msg) {
+        // Example: replace alert with your theme's UI feedback
+        alert(msg);
+      }
+
+      // Try to get product JSON from inline script
+      function getInlineProductData() {
+        try {
+          const el = document.getElementById('product-data');
+          return el ? JSON.parse(el.textContent) : null;
+        } catch (e) {
+          console.warn('Product JSON parse error', e);
+          return null;
+        }
+      }
+
+      // Optional fallback: fetch product JSON from URL if not embedded
+      async function fetchProductDataFromHandle() {
+        try {
+          const parts = window.location.pathname.split('/').filter(Boolean);
+          // Expecting /products/{handle}
+          const idx = parts.indexOf('products');
+          if (idx === -1 || !parts[idx + 1]) return null;
+          const handle = parts[idx + 1];
+          const res = await fetch('/products/' + handle + '.js');
+          if (!res.ok) return null;
+          return await res.json();
+        } catch (e) {
+          console.warn('Product JSON fetch failed', e);
+          return null;
+        }
+      }
+
+      // Ensure product data available (inline first, else fetch)
+      let productDataCache = null;
+      async function ensureProductData() {
+        if (productDataCache) return productDataCache;
+
+        const inline = getInlineProductData();
+        if (inline) {
+          productDataCache = inline;
+          return productDataCache;
+        }
+
+        // Fallback fetch
+        const fetched = await fetchProductDataFromHandle();
+        if (fetched) {
+          productDataCache = fetched;
+          return productDataCache;
+        }
+
+        return null;
+      }
+
+      // optionValues -> exact variant match (order: option1, option2, option3)
+      function findVariantByOptions(productData, optionValues) {
+        if (!productData || !Array.isArray(productData.variants)) return null;
+        return (
+          productData.variants.find((v) => {
+            for (let i = 0; i < optionValues.length; i++) {
+              if ((v['option' + (i + 1)] || '') !== optionValues[i]) return false;
+            }
+            return true;
+          }) || null
+        );
+      }
+
+      // Active bundle element
+      function getActiveBundle() {
+        return document.querySelector('.bundle-option.active');
+      }
+
+      // Protita row-er moddhe thaka select gulor value collect (sorted by data-option-index)
+      function getOptionValuesFromRow(rowEl) {
+        const selects = rowEl.querySelectorAll('select[data-option-index]');
+        const ordered = Array.from(selects).sort((a, b) => {
+          return parseInt(a.dataset.optionIndex) - parseInt(b.dataset.optionIndex);
+        });
+        return ordered.map((s) => s.value);
+      }
+
+      // Active bundle theke cart items build
+      function buildItemsFromActiveBundle(productData) {
+        const activeBundle = getActiveBundle();
+        if (!activeBundle) throw new Error('Please select a bundle first.');
+
+        const tier = parseInt(activeBundle.dataset.tier);
+        const rows = activeBundle.querySelectorAll('.variant-row');
+        if (!rows.length) throw new Error('No variant rows found for the selected bundle.');
+
+        const items = [];
+
+        rows.forEach((rowEl, idx) => {
+          const optionValues = getOptionValuesFromRow(rowEl);
+          if (!optionValues.length) {
+            throw new Error('Please select options for row #' + (idx + 1));
           }
 
-          await updateCartCount();
-          toast('Bundle added to cart 🎉');
-        } catch (err) {
-          console.error(err);
-          toast(err.message || 'Something went wrong. Please try again.');
-        } finally {
-          btn.disabled = false;
-          btn.textContent = oldText;
+          const variant = findVariantByOptions(productData, optionValues);
+          if (!variant) {
+            throw new Error('No matching variant found for row #' + (idx + 1));
+          }
+          if (!variant.available) {
+            throw new Error('Selected variant for row #' + (idx + 1) + ' is out of stock.');
+          }
+
+          items.push({
+            id: variant.id,
+            quantity: 1,
+            // NOTE:
+            // - Niche properties add korle Shopify identical line items merge korbena.
+            // - Jodi same variant duita row-e select korle merge korte chan, 'Row' property remove kore din.
+            properties: {
+              Bundle: tier + ' Pair Bundle',
+              Row: '#' + (idx + 1),
+            },
+          });
+        });
+
+        return items;
+      }
+
+      // POST to /cart/add.js with multiple items
+      async function addItemsToCart(items) {
+        const res = await fetch('/cart/add.js', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify({ items }),
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err?.description || 'Failed to add to cart.');
         }
-      });
-    }
+
+        return res.json();
+      }
+
+      // Optional: cart bubble update (if #cart-count exists)
+      async function updateCartCount() {
+        try {
+          const cart = await fetch('/cart.js').then((r) => r.json());
+          const el = document.querySelector('#cart-count');
+          if (el) el.textContent = cart.item_count;
+        } catch (e) {
+          console.warn('Cart count update failed', e);
+        }
+      }
+
+      function initAddToCart() {
+        const btn = document.querySelector('.add-to-cart');
+        if (!btn) return;
+
+        btn.addEventListener('click', async (e) => {
+          e.preventDefault();
+
+          // Button state
+          const oldText = btn.textContent;
+          btn.disabled = true;
+          btn.textContent = 'Adding...';
+
+          try {
+            // Ensure product data available
+            const productData = await ensureProductData();
+            if (!productData) {
+              throw new Error('Product data not found. Please include the product JSON.');
+            }
+
+            // Build items from current selections
+            const items = buildItemsFromActiveBundle(productData);
+
+            // Add to cart via AJAX
+            await addItemsToCart(items);
+
+            // Optional: update cart bubble / open mini cart
+            await updateCartCount();
+            // Example: if theme has drawer
+            // if (window.ThemeCart && typeof window.ThemeCart.open === 'function') { window.ThemeCart.open(); }
+
+            toast('Bundle added to cart 🎉');
+          } catch (err) {
+            console.error(err);
+            toast(err.message || 'Something went wrong. Please try again.');
+          } finally {
+            // Reset button
+            btn.disabled = false;
+            btn.textContent = oldText;
+          }
+        });
+      }
+
+      document.addEventListener('DOMContentLoaded', initAddToCart);
+    })();
   });
 </script>
