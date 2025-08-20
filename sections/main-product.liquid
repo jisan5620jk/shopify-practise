@@ -204,7 +204,9 @@
 
       {% for i in (1..3) %}
         {% assign discount = discounts[i-1] | times: 1.0 %}
-        {% assign discounted_price = base_price | times: i | minus: base_price | times: i | times: discount %}
+        {% assign total_price = base_price | times: i %}
+        {% assign discount_amount = total_price | times: discount %}
+        {% assign discounted_price = total_price | minus: discount_amount %}
         {% assign tag = tags[i-1] %}
         {% assign label = labels[i-1] %}
 
@@ -235,39 +237,7 @@
               <span class="compare">Tk {{ compare_price | times: i | money }}</span>
             </div>
           </label>
-
-          <div class="variant-selectors">
-            <div class="variant-inner">
-              {% for j in (1..i) %}
-                <div class="variant-row">
-                  <label>#{{ j }}</label>
-                  <div>
-                    {% for option in product.options_with_values %}
-                      <div class="product-option">
-                        <label for="option-{{ forloop.index0 }}">{{ option.name }}</label>
-                        <select
-                          id="option-{{ forloop.index0 }}"
-                          name="options[{{ option.name }}]"
-                          data-option-index="{{ forloop.index0 }}"
-                        >
-                          {% for value in option.values %}
-                            <option
-                              value="{{ value | escape }}"
-                              {% if value == option.selected_value %}
-                                selected
-                              {% endif %}
-                            >
-                              {{ value | escape }}
-                            </option>
-                          {% endfor %}
-                        </select>
-                      </div>
-                    {% endfor %}
-                  </div>
-                </div>
-              {% endfor %}
-            </div>
-          </div>
+          ...
         </div>
       {% endfor %}
 
