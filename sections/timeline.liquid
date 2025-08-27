@@ -301,3 +301,66 @@
     })();
   </script>
 </section>
+
+{% schema %}
+{
+  "name": "Timeline slider",
+  "tag": "section",
+  "class": "timeline-under-slider",
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Heading", "default": "The power to transform in weeks" },
+    { "type": "color", "id": "accent", "label": "Accent color", "default": "#a7754e" },
+    {
+      "type": "range",
+      "id": "gap",
+      "label": "Gap between markers",
+      "min": 60,
+      "max": 240,
+      "step": 4,
+      "unit": "px",
+      "default": 120
+    },
+    {
+      "type": "range",
+      "id": "col_width",
+      "label": "Marker column width",
+      "min": 120,
+      "max": 240,
+      "step": 5,
+      "unit": "px",
+      "default": 160
+    },
+    { "type": "checkbox", "id": "show_nav", "label": "Show arrow navigation", "default": true }
+  ],
+  "blocks": [
+    {
+      "type": "step",
+      "name": "Step",
+      "settings": [
+        { "type": "text", "id": "label", "label": "Label (e.g. Week 1)", "default": "Week 1" },
+        { "type": "text", "id": "title", "label": "Title", "default": "The journey begins" },
+        {
+          "type": "textarea",
+          "id": "text",
+          "label": "Description",
+          "default": "Bioavailable, patented ingredients enter your bloodstream and start to deliver measurable results."
+        },
+        { "type": "image_picker", "id": "image", "label": "Image" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Timeline slider (auto-height)",
+      "category": "Custom",
+      "blocks": [
+        { "type": "step", "settings": { "label": "Week 1", "title": "The journey begins" } },
+        { "type": "step", "settings": { "label": "Week 2", "title": "Momentum builds" } },
+        { "type": "step", "settings": { "label": "Week 3", "title": "Noticeable changes" } },
+        { "type": "step", "settings": { "label": "Week 4", "title": "Compounding benefits" } },
+        { "type": "step", "settings": { "label": "Beyond", "title": "Long-term transformation" } }
+      ]
+    }
+  ]
+}
+{% endschema %}
