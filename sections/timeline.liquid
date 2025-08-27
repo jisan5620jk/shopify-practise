@@ -278,18 +278,15 @@
           updateNav();
           return;
         }
-        // deactivate previous
         $items[current]?.classList.remove('is-active');
         $tabs[current]?.setAttribute('aria-selected', 'false');
-
-        // activate next
         current = index;
         $items[current]?.classList.add('is-active');
         $tabs[current]?.setAttribute('aria-selected', 'true');
-
         if (opts.scroll) centerItem(index);
         if (opts.focus) $tabs[current]?.focus({ preventScroll: true });
         updateNav();
+        updateHandlePosition();
       }
 
       function centerItem(index) {
@@ -306,7 +303,64 @@
         if ($next) $next.disabled = current >= $items.length - 1;
       }
 
-      // events
+      // ---------------- draggable handle ----------------
+      const $railWrap = $section.querySelector('.ts-rail-wrap');
+      const $handle = document.createElement('div');
+      $handle.style.cssText = `
+      position: absolute;
+      top: -6px;
+      width: 16px; height: 16px;
+      background: var(--ts-accent);
+      border-radius: 50%;
+      cursor: grab;
+      z-index: 3;
+      transform: translateX(0);
+    `;
+      $railWrap.appendChild($handle);
+
+      let isDragging = false;
+
+      function updateHandlePosition() {
+        const tab = $tabs[current];
+        if (!tab) return;
+        const railRect = $railWrap.getBoundingClientRect();
+        const tabRect = tab.getBoundingClientRect();
+        const left = tabRect.left + tabRect.width / 2 - railRect.left;
+        $handle.style.transform = `translateX(${left - $handle.offsetWidth / 2}px)`;
+      }
+
+      $handle.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        $handle.style.cursor = 'grabbing';
+        e.preventDefault();
+      });
+      document.addEventListener('mouseup', () => {
+        isDragging = false;
+        $handle.style.cursor = 'grab';
+      });
+      document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        const railRect = $railWrap.getBoundingClientRect();
+        let x = e.clientX - railRect.left;
+        x = clamp(x, 0, railRect.width);
+        $handle.style.transform = `translateX(${x - $handle.offsetWidth / 2}px)`;
+
+        // nearest tab
+        let nearestIndex = 0;
+        let nearestDist = Infinity;
+        $tabs.forEach((tab, i) => {
+          const tabRect = tab.getBoundingClientRect();
+          const tabCenter = tabRect.left + tabRect.width / 2 - railRect.left;
+          const dist = Math.abs(tabCenter - x);
+          if (dist < nearestDist) {
+            nearestDist = dist;
+            nearestIndex = i;
+          }
+        });
+        setActive(nearestIndex, { scroll: false, focus: false });
+      });
+
+      // ---------------- events ----------------
       $tabs.forEach((tab, i) => {
         tab.addEventListener('click', () => setActive(i, { scroll: true, focus: false }));
         tab.addEventListener('keydown', (e) => {
@@ -341,6 +395,8 @@
         const idx = Number(e.target?.querySelector('.ts-tab')?.dataset?.index);
         if (!Number.isNaN(idx)) setActive(idx, { scroll: true, focus: true });
       });
+
+      window.addEventListener('resize', updateHandlePosition);
     })();
   </script>
 </section>
