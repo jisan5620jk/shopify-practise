@@ -1,6 +1,5 @@
 {% comment %}
-  Section: Timeline slider (content under the active box)
-  Behavior: Active marker/box select korle oi box-er niche content card show hobe
+  Section: Timeline slider with draggable handle on top
 {% endcomment %}
 
 <section id="timeline-{{ section.id }}" class="timeline-section">
@@ -15,10 +14,10 @@
       --ts-border: #eaeaea;
       --ts-bg: #fff;
 
-      --ts-col: {{ section.settings.col_width | default: 160 }}px; /* each marker column width */
-      --ts-gap: {{ section.settings.gap | default: 120 }}px;      /* gap between markers */
-      --ts-card-w: clamp(280px, 44vw, 520px);                      /* content card width */
-      --ts-space-below: 260px; /* bottom space under rail so card has room */
+      --ts-col: {{ section.settings.col_width | default: 160 }}px;
+      --ts-gap: {{ section.settings.gap | default: 120 }}px;
+      --ts-card-w: clamp(280px, 44vw, 520px);
+      --ts-space-below: 260px;
       --ts-radius: 12px;
     }
 
@@ -29,6 +28,7 @@
       padding: 32px 20px 60px;
       color: var(--ts-ink);
       background: var(--ts-bg);
+      position: relative;
     }
 
     #timeline-{{ section.id }} .ts-heading{
@@ -50,7 +50,7 @@
       display: flex;
       gap: var(--ts-gap);
       overflow-x: auto;
-      overflow-y: visible; /* allow dropdown content to overflow */
+      overflow-y: visible;
       scroll-behavior: smooth;
       scrollbar-width: thin;
       height: 300px;
@@ -79,7 +79,6 @@
       outline-offset: 4px;
     }
 
-    /* dot on the rail */
     #timeline-{{ section.id }} .ts-dot{
       position: absolute;
       top: -1px;
@@ -96,7 +95,6 @@
       white-space: nowrap;
     }
 
-    /* active marker */
     #timeline-{{ section.id }} .ts-tab[aria-selected="true"] .ts-dot{
       width: 14px; height: 14px; margin-left: -2px;
       background: var(--ts-accent);
@@ -104,11 +102,11 @@
     }
     #timeline-{{ section.id }} .ts-tab[aria-selected="true"] .ts-label{ color: var(--ts-accent); }
 
-    /* ---- The dropdown content card (under active marker) ---- */
+    /* ---- Content card ---- */
     #timeline-{{ section.id }} .ts-content{
       position: absolute;
-      top: 48px;           /* below the rail */
-      left: -8px;          /* slight left from marker */
+      top: 48px;
+      left: -8px;
       width: var(--ts-card-w);
       max-width: 90vw;
       background: #fff;
@@ -127,8 +125,6 @@
       visibility: visible; opacity: 1; transform: translateY(0);
       pointer-events: auto;
     }
-
-    /* small arrow pointer */
     #timeline-{{ section.id }} .ts-content:before{
       content: "";
       position: absolute;
@@ -152,11 +148,8 @@
       line-height: 1.25; margin: 8px 0 6px; font-weight: 650;
     }
     #timeline-{{ section.id }} .ts-desc{ color: var(--ts-ink-dim); line-height: 1.6; }
-
     #timeline-{{ section.id }} .ts-media{ display: flex; gap: 14px; align-items: flex-start; }
-    #timeline-{{ section.id }} .ts-media img{
-      width: 70px; height: 70px; object-fit: cover; border-radius: 8px; background: #f6f6f6;
-    }
+    #timeline-{{ section.id }} .ts-media img{ width: 70px; height: 70px; object-fit: cover; border-radius: 8px; background: #f6f6f6; }
 
     /* ---- Nav arrows ---- */
     #timeline-{{ section.id }} .ts-nav{
@@ -173,13 +166,20 @@
       opacity:.35; cursor:not-allowed; background:#fafafa; color:#999; border-color:#ddd;
     }
 
+    /* ---- Draggable handle ---- */
+    .ts-handle-wrapper{
+      position: absolute; top: -10px; left: 0; width: 100%; height: 20px; pointer-events: none; z-index: 3;
+    }
+    .ts-handle{
+      width: 16px; height: 16px; border-radius: 50%; background: var(--ts-accent);
+      cursor: grab; position: absolute; top: 0; left: 0; pointer-events: all;
+      transition: transform 0.1s linear;
+    }
+    .ts-handle:active{ cursor: grabbing; }
+
     @media (max-width: 640px){
       #timeline-{{ section.id }}{ --ts-col: 140px; --ts-gap: 80px; }
       #timeline-{{ section.id }} .ts-content{ left: -6px; }
-    }
-    @media (prefers-reduced-motion: reduce){
-      #timeline-{{ section.id }} .ts-scroller{ scroll-behavior: auto; }
-      #timeline-{{ section.id }} .ts-content{ transition: none; }
     }
   </style>
 
@@ -189,6 +189,15 @@
     {% endif %}
 
     <div class="ts-rail-wrap">
+      <!-- Draggable handle with optional image -->
+      <div class="ts-handle-wrapper">
+        {% if section.settings.handle_image != blank %}
+          <img src="{{ section.settings.handle_image | image_url: width: 40 }}" alt="Handle" class="ts-handle">
+        {% else %}
+          <div class="ts-handle"></div>
+        {% endif %}
+      </div>
+
       <div class="ts-scroller" role="tablist" aria-label="Timeline steps">
         {% for block in section.blocks %}
           {% assign i = forloop.index0 %}
@@ -215,8 +224,6 @@
                     src="{{ block.settings.image | image_url: width: 180 }}"
                     alt="{{ block.settings.image.alt | escape }}"
                     loading="lazy"
-                    width="70"
-                    height="70"
                   >
                 {% endif %}
                 <div>
@@ -258,72 +265,44 @@
     (() => {
       const $section = document.getElementById('timeline-{{ section.id }}');
       if (!$section) return;
-
       const $scroller = $section.querySelector('.ts-scroller');
-      const $items = Array.from($section.querySelectorAll('.ts-item'));
       const $tabs = Array.from($section.querySelectorAll('.ts-tab'));
+      const $handle = $section.querySelector('.ts-handle');
       const $prev = $section.querySelector('.ts-prev');
       const $next = $section.querySelector('.ts-next');
-
-      let current = 0;
+      let current = 0,
+        isDragging = false;
 
       function clamp(n, min, max) {
         return Math.max(min, Math.min(max, n));
       }
 
       function setActive(index, opts = { scroll: true, focus: false }) {
-        index = clamp(index, 0, $items.length - 1);
-        if (current === index) {
-          if (opts.scroll) centerItem(index);
-          updateNav();
-          return;
+        index = clamp(index, 0, $tabs.length - 1);
+        if (current !== index) {
+          $tabs[current]?.closest('.ts-item')?.classList.remove('is-active');
+          $tabs[current]?.setAttribute('aria-selected', 'false');
+          current = index;
+          $tabs[current]?.closest('.ts-item')?.classList.add('is-active');
+          $tabs[current]?.setAttribute('aria-selected', 'true');
+          if (opts.scroll) centerItem(current);
+          updateHandlePosition();
         }
-        $items[current]?.classList.remove('is-active');
-        $tabs[current]?.setAttribute('aria-selected', 'false');
-        current = index;
-        $items[current]?.classList.add('is-active');
-        $tabs[current]?.setAttribute('aria-selected', 'true');
-        if (opts.scroll) centerItem(index);
-        if (opts.focus) $tabs[current]?.focus({ preventScroll: true });
-        updateNav();
-        updateHandlePosition();
       }
 
       function centerItem(index) {
         const tab = $tabs[index];
         if (!tab) return;
-        const box = tab.getBoundingClientRect();
         const parent = $scroller.getBoundingClientRect();
+        const box = tab.getBoundingClientRect();
         const delta = box.left + box.width / 2 - (parent.left + parent.width / 2);
         $scroller.scrollBy({ left: delta, behavior: 'smooth' });
       }
 
-      function updateNav() {
-        if ($prev) $prev.disabled = current <= 0;
-        if ($next) $next.disabled = current >= $items.length - 1;
-      }
-
-      // ---------------- draggable handle ----------------
-      const $railWrap = $section.querySelector('.ts-rail-wrap');
-      const $handle = document.createElement('div');
-      $handle.style.cssText = `
-      position: absolute;
-      top: -6px;
-      width: 16px; height: 16px;
-      background: var(--ts-accent);
-      border-radius: 50%;
-      cursor: grab;
-      z-index: 3;
-      transform: translateX(0);
-    `;
-      $railWrap.appendChild($handle);
-
-      let isDragging = false;
-
       function updateHandlePosition() {
         const tab = $tabs[current];
         if (!tab) return;
-        const railRect = $railWrap.getBoundingClientRect();
+        const railRect = $scroller.getBoundingClientRect();
         const tabRect = tab.getBoundingClientRect();
         const left = tabRect.left + tabRect.width / 2 - railRect.left;
         $handle.style.transform = `translateX(${left - $handle.offsetWidth / 2}px)`;
@@ -331,23 +310,17 @@
 
       $handle.addEventListener('mousedown', (e) => {
         isDragging = true;
-        $handle.style.cursor = 'grabbing';
         e.preventDefault();
       });
-      document.addEventListener('mouseup', () => {
-        isDragging = false;
-        $handle.style.cursor = 'grab';
-      });
+      document.addEventListener('mouseup', () => (isDragging = false));
       document.addEventListener('mousemove', (e) => {
         if (!isDragging) return;
-        const railRect = $railWrap.getBoundingClientRect();
-        let x = e.clientX - railRect.left;
-        x = clamp(x, 0, railRect.width);
+        const railRect = $scroller.getBoundingClientRect();
+        let x = clamp(e.clientX - railRect.left, 0, railRect.width);
         $handle.style.transform = `translateX(${x - $handle.offsetWidth / 2}px)`;
 
-        // nearest tab
-        let nearestIndex = 0;
-        let nearestDist = Infinity;
+        let nearestIndex = 0,
+          nearestDist = Infinity;
         $tabs.forEach((tab, i) => {
           const tabRect = tab.getBoundingClientRect();
           const tabCenter = tabRect.left + tabRect.width / 2 - railRect.left;
@@ -360,7 +333,6 @@
         setActive(nearestIndex, { scroll: false, focus: false });
       });
 
-      // ---------------- events ----------------
       $tabs.forEach((tab, i) => {
         tab.addEventListener('click', () => setActive(i, { scroll: true, focus: false }));
         tab.addEventListener('keydown', (e) => {
@@ -377,7 +349,7 @@
             e.preventDefault();
           }
           if (e.key === 'End') {
-            setActive($items.length - 1, { scroll: true, focus: true });
+            setActive($tabs.length - 1, { scroll: true, focus: true });
             e.preventDefault();
           }
         });
@@ -385,18 +357,9 @@
 
       $prev?.addEventListener('click', () => setActive(current - 1, { scroll: true, focus: true }));
       $next?.addEventListener('click', () => setActive(current + 1, { scroll: true, focus: true }));
-
-      // init
-      setActive(0, { scroll: false, focus: false });
-      updateNav();
-
-      // Editor support
-      document.addEventListener('shopify:block:select', (e) => {
-        const idx = Number(e.target?.querySelector('.ts-tab')?.dataset?.index);
-        if (!Number.isNaN(idx)) setActive(idx, { scroll: true, focus: true });
-      });
-
       window.addEventListener('resize', updateHandlePosition);
+
+      setActive(0, { scroll: false });
     })();
   </script>
 </section>
@@ -404,11 +367,10 @@
 {% schema %}
 {
   "name": "Timeline slider",
-  "tag": "section",
-  "class": "timeline-under-slider",
   "settings": [
     { "type": "text", "id": "heading", "label": "Heading", "default": "The power to transform in weeks" },
     { "type": "color", "id": "accent", "label": "Accent color", "default": "#a7754e" },
+    { "type": "image_picker", "id": "handle_image", "label": "Handle image (optional)" },
     {
       "type": "range",
       "id": "gap",
@@ -436,7 +398,7 @@
       "type": "step",
       "name": "Step",
       "settings": [
-        { "type": "text", "id": "label", "label": "Label (e.g. Week 1)", "default": "Week 1" },
+        { "type": "text", "id": "label", "label": "Label", "default": "Week 1" },
         { "type": "text", "id": "title", "label": "Title", "default": "The journey begins" },
         {
           "type": "textarea",
@@ -450,7 +412,7 @@
   ],
   "presets": [
     {
-      "name": "Timeline slider (under active card)",
+      "name": "Timeline slider (draggable handle)",
       "category": "Custom",
       "blocks": [
         { "type": "step", "settings": { "label": "Week 1", "title": "The journey begins" } },
