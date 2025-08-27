@@ -1,76 +1,71 @@
-{% liquid
-  assign section_id = 'timeline-' | append: section.id
-%}
+{% assign section_id = 'timeline-' | append: section.id %}
 
 <section id="{{ section_id }}" class="timeline-section">
-  <div class="ts-rail-wrap">
-    <div class="ts-rail"></div>
-    <div
-      class="ts-handle"
-      role="slider"
-      aria-valuemin="0"
-      aria-valuemax="{{ section.blocks.size | minus: 1 }}"
-      aria-valuenow="0"
-    ></div>
+  <div class="ts-inner">
+    <div class="ts-rail-wrap">
+      <div class="ts-rail"></div>
+      <div
+        class="ts-handle"
+        role="slider"
+        aria-valuemin="0"
+        aria-valuemax="{{ section.blocks.size | minus: 1 }}"
+        aria-valuenow="0"
+      ></div>
 
-    <div class="ts-scroller" role="tablist" aria-label="Timeline steps">
-      {% for block in section.blocks %}
-        {% assign i = forloop.index0 %}
-        {% assign tab_id = 'tab-' | append: section.id | append: '-' | append: i %}
-        {% assign panel_id = 'panel-' | append: section.id | append: '-' | append: i %}
+      <div class="ts-scroller" role="tablist" aria-label="Timeline steps">
+        {% for block in section.blocks %}
+          {% assign i = forloop.index0 %}
+          {% assign tab_id = 'tab-' | append: section.id | append: '-' | append: i %}
+          {% assign panel_id = 'panel-' | append: section.id | append: '-' | append: i %}
 
-        <div class="ts-item {% if forloop.first %}is-active{% endif %}" {{ block.shopify_attributes }}>
-          <button
-            id="{{ tab_id }}"
-            class="ts-tab"
-            role="tab"
-            aria-controls="{{ panel_id }}"
-            aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
-            data-index="{{ i }}"
-            type="button"
-          >
-            <span class="ts-label">{{ block.settings.label | default: 'Week ' | append: forloop.index }}</span>
-          </button>
-          <div id="{{ panel_id }}" class="ts-content" role="tabpanel" aria-labelledby="{{ tab_id }}">
-            <h3>{{ block.settings.title }}</h3>
-            <p>{{ block.settings.text }}</p>
+          <div class="ts-item {% if forloop.first %}is-active{% endif %}" {{ block.shopify_attributes }}>
+            <button
+              id="{{ tab_id }}"
+              class="ts-tab"
+              role="tab"
+              aria-controls="{{ panel_id }}"
+              aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+              data-index="{{ i }}"
+              type="button"
+            >
+              <span class="ts-label">{{ block.settings.label | default: 'Week ' | append: forloop.index }}</span>
+            </button>
+            <div id="{{ panel_id }}" class="ts-content" role="tabpanel" aria-labelledby="{{ tab_id }}">
+              {{ block.settings.content }}
+            </div>
           </div>
-        </div>
-      {% endfor %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="ts-nav">
+      <button class="ts-prev" aria-label="Previous">&#10094;</button>
+      <button class="ts-next" aria-label="Next">&#10095;</button>
     </div>
   </div>
 </section>
 
 <style>
   .timeline-section {
+    --ts-accent: #333;
+    --ts-rail: #ccc;
     --ts-bg: #fff;
-    --ts-rail: #ddd;
-    --ts-accent: #3b82f6; /* blue-500 */
+    position: relative;
     padding: 40px 20px;
-    position: relative;
   }
+  .timeline-section .ts-inner { position: relative; }
 
-  .timeline-section .ts-rail-wrap {
-    position: relative;
-    max-width: 900px;
-    margin: 0 auto;
-  }
-
+  .timeline-section .ts-rail-wrap { position: relative; margin-bottom: 40px; }
   .timeline-section .ts-rail {
     position: absolute;
-    top: 28px;
-    left: 0;
-    right: 0;
+    top: 28px; left: 0; right: 0;
     height: 2px;
     background: var(--ts-rail);
   }
-
   .timeline-section .ts-handle {
     position: absolute;
-    top: 19px;
-    left: 0;
-    width: 20px;
-    height: 20px;
+    top: 19px; left: 0;
+    width: 20px; height: 20px;
     background: var(--ts-accent);
     border-radius: 50%;
     box-shadow: 0 0 0 4px var(--ts-bg);
@@ -82,107 +77,127 @@
 
   .timeline-section .ts-scroller {
     display: flex;
-    justify-content: space-between;
-    position: relative;
-    margin-top: 60px;
+    overflow-x: auto;
+    scrollbar-width: none;
   }
+  .timeline-section .ts-scroller::-webkit-scrollbar { display: none; }
 
-  .timeline-section .ts-item {
-    flex: 1 1 auto;
-    text-align: center;
-  }
+  .timeline-section .ts-item { flex: 0 0 auto; padding: 10px 20px; }
   .timeline-section .ts-tab {
-    background: none;
-    border: none;
-    font-size: 14px;
-    color: #555;
-    cursor: pointer;
+    background: none; border: none;
+    font: inherit; cursor: pointer;
   }
-  .timeline-section .ts-item.is-active .ts-tab {
-    color: var(--ts-accent);
-    font-weight: 600;
+  .timeline-section .ts-item.is-active .ts-tab { color: var(--ts-accent); font-weight: bold; }
+
+  .timeline-section .ts-content { margin-top: 20px; }
+
+  .timeline-section .ts-nav {
+    display: flex; justify-content: space-between; margin-top: 20px;
   }
-  .timeline-section .ts-content {
-    margin-top: 10px;
-    display: none;
-  }
-  .timeline-section .ts-item.is-active .ts-content {
-    display: block;
+  .timeline-section .ts-nav button {
+    background: var(--ts-accent); color: #fff;
+    border: none; padding: 8px 16px;
+    border-radius: 4px; cursor: pointer;
   }
 </style>
 
 <script>
   document.addEventListener('DOMContentLoaded', () => {
-    const $section = document.querySelector('#{{ section_id }}');
-    if (!$section) return;
+    const section = document.getElementById('{{ section_id }}');
+    if (!section) return;
 
-    const $rail = $section.querySelector('.ts-rail');
-    const $handle = $section.querySelector('.ts-handle');
-    const $items = [...$section.querySelectorAll('.ts-item')];
-    const $tabs = $section.querySelectorAll('.ts-tab');
+    const scroller = section.querySelector('.ts-scroller');
+    const items = section.querySelectorAll('.ts-item');
+    const tabs = section.querySelectorAll('.ts-tab');
+    const contents = section.querySelectorAll('.ts-content');
+    const prev = section.querySelector('.ts-prev');
+    const next = section.querySelector('.ts-next');
+    const handle = section.querySelector('.ts-handle');
+    const rail = section.querySelector('.ts-rail');
 
-    let railRect,
-      railWidth,
+    let current = 0,
       isDragging = false,
-      current = 0;
+      railRect,
+      railWidth;
 
+    // ✅ setActive (unchanged logic)
     function setActive(index, opts = { scroll: true, focus: false }) {
-      current = index;
-      $items.forEach((el, i) => {
-        el.classList.toggle('is-active', i === index);
-        el.querySelector('.ts-tab').setAttribute('aria-selected', i === index);
+      if (index < 0 || index >= items.length) return;
+      items.forEach((item, i) => {
+        const tab = tabs[i];
+        const panel = contents[i];
+        if (i === index) {
+          item.classList.add('is-active');
+          tab.setAttribute('aria-selected', 'true');
+          panel.hidden = false;
+        } else {
+          item.classList.remove('is-active');
+          tab.setAttribute('aria-selected', 'false');
+          panel.hidden = true;
+        }
       });
+      current = index;
       moveHandleToIndex(index);
+      if (opts.scroll) {
+        tabs[index].scrollIntoView({ behavior: 'smooth', inline: 'center' });
+      }
+      if (opts.focus) tabs[index].focus();
     }
 
+    // ✅ handle positioning
     function moveHandleToIndex(index) {
-      let step = railWidth / ($items.length - 1);
+      let step = railWidth / (items.length - 1);
       let x = step * index;
-      $handle.style.left = x + 'px';
-      $handle.setAttribute('aria-valuenow', index);
+      handle.style.left = x + 'px';
+      handle.setAttribute('aria-valuenow', index);
     }
-
     function nearestIndex(x) {
-      let step = railWidth / ($items.length - 1);
+      let step = railWidth / (items.length - 1);
       return Math.round(x / step);
     }
 
-    $tabs.forEach((tab) => {
-      tab.addEventListener('click', (e) => {
-        let idx = parseInt(tab.dataset.index, 10);
-        setActive(idx);
-      });
+    // ✅ tab click
+    tabs.forEach((tab, i) => tab.addEventListener('click', () => setActive(i, { scroll: true, focus: true })));
+
+    // ✅ arrows
+    prev.addEventListener('click', () => setActive(current - 1));
+    next.addEventListener('click', () => setActive(current + 1));
+
+    // ✅ keyboard
+    scroller.addEventListener('keydown', (e) => {
+      if (['ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        e.preventDefault();
+        setActive(current + (e.key === 'ArrowRight' ? 1 : -1), { scroll: true, focus: true });
+      }
     });
 
-    $handle.addEventListener('mousedown', (e) => {
+    // ✅ drag handle
+    handle.addEventListener('mousedown', (e) => {
       isDragging = true;
-      railRect = $rail.getBoundingClientRect();
+      railRect = rail.getBoundingClientRect();
       railWidth = railRect.width;
-      e.preventDefault();
     });
-
     document.addEventListener('mousemove', (e) => {
       if (!isDragging) return;
       let x = e.clientX - railRect.left;
       x = Math.max(0, Math.min(x, railWidth));
-      $handle.style.left = x + 'px';
+      handle.style.left = x + 'px';
       let idx = nearestIndex(x);
       setActive(idx, { scroll: false, focus: false });
     });
-
     document.addEventListener('mouseup', () => {
-      if (!isDragging) return;
       isDragging = false;
     });
 
+    // ✅ resize
     window.addEventListener('resize', () => {
-      railRect = $rail.getBoundingClientRect();
+      railRect = rail.getBoundingClientRect();
       railWidth = railRect.width;
       moveHandleToIndex(current);
     });
 
-    // init
-    railRect = $rail.getBoundingClientRect();
+    // ✅ init
+    railRect = rail.getBoundingClientRect();
     railWidth = railRect.width;
     setActive(current);
   });
