@@ -116,6 +116,7 @@
       "settings": {
         "heading": "The power to transform in weeks",
         "accent": "#a7754e",
+        "handle_image": "shopify://shop_images/mainAshcream_540x_1.png",
         "gap": 120,
         "col_width": 160,
         "show_nav": true
