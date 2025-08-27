@@ -4,107 +4,108 @@
 
 <section id="timeline-{{ section.id }}" class="timeline-section">
   <style>
-    #timeline-{{ section.id }}{
-      --ts-accent: {{ section.settings.accent | default: '#a7754e' }};
-      --ts-accent-ghost: color-mix(in srgb, var(--ts-accent) 18%, #fff);
-      --ts-ink: #222;
-      --ts-ink-dim: #666;
-      --ts-rail: #d8d8d8;
-      --ts-border: #eaeaea;
-      --ts-bg: #fff;
+      #timeline-{{ section.id }}{
+        --ts-accent: {{ section.settings.accent | default: '#a7754e' }};
+        --ts-accent-ghost: color-mix(in srgb, var(--ts-accent) 18%, #fff);
+        --ts-ink: #222;
+        --ts-ink-dim: #666;
+        --ts-rail: #d8d8d8;
+        --ts-border: #eaeaea;
+        --ts-bg: #fff;
 
-      --ts-col: {{ section.settings.col_width | default: 160 }}px;
-      --ts-gap: {{ section.settings.gap | default: 120 }}px;
-      --ts-card-w: clamp(280px, 44vw, 520px);
-      --ts-radius: 12px;
+        --ts-col: {{ section.settings.col_width | default: 160 }}px;
+        --ts-gap: {{ section.settings.gap | default: 120 }}px;
+        --ts-card-w: clamp(280px, 44vw, 520px);
+        --ts-radius: 12px;
 
-      /* JS will update this so content always fully visible */
-      --ts-space: 260px;
-    }
+        /* JS will update this so content always fully visible */
+        --ts-space: 260px;
+      }
 
-    .timeline-section .ts-inner{
-      max-width: 1200px; margin:0 auto; padding:32px 20px 60px; color:var(--ts-ink); background:var(--ts-bg);
-    }
-    .timeline-section .ts-heading{
-      font-size: clamp(24px, 2.4vw, 40px); line-height:1.15; margin:0 0 28px; font-weight:650; letter-spacing:-.01em;
-    }
+      .timeline-section .ts-inner{
+        max-width: 1200px; margin:0 auto; padding:32px 20px 60px; color:var(--ts-ink); background:var(--ts-bg);
+      }
+      .timeline-section .ts-heading{
+        font-size: clamp(24px, 2.4vw, 40px); line-height:1.15; margin:0 0 28px; font-weight:650; letter-spacing:-.01em;
+      }
 
-    /* Rail area gets dynamic bottom space = active content height */
-    .timeline-section .ts-rail-wrap{
-      position: relative;
-      padding-bottom: var(--ts-space);
-    }
+      /* Rail area gets dynamic bottom space = active content height */
+      .timeline-section .ts-rail-wrap{
+        position: relative;
+    padding-bottom: calc(var(--ts-space) + 12px);
 
-    .timeline-section .ts-scroller{
-      position: relative;
-      display: flex; gap: var(--ts-gap);
-      overflow-x: auto; overflow-y: visible; /* no Y-scroll */
-      scroll-behavior: smooth; scrollbar-width: thin;
-      padding: 56px 16px 10px;
-      border-top: 2px solid var(--ts-rail);
-    }
-    .timeline-section .ts-scroller::-webkit-scrollbar{height:8px}
-    .timeline-section .ts-scroller::-webkit-scrollbar-thumb{background:#cfcfcf;border-radius:999px}
+      }
 
-    .timeline-section .ts-item{ position:relative; flex:0 0 var(--ts-col); min-width:var(--ts-col); align-self:flex-start; }
+      .timeline-section .ts-scroller{
+        position: relative;
+        display: flex; gap: var(--ts-gap);
+        overflow-x: auto; overflow-y: visible; /* no Y-scroll */
+        scroll-behavior: smooth; scrollbar-width: thin;
+        padding: 56px 16px 10px;
+        border-top: 2px solid var(--ts-rail);
+      }
+      .timeline-section .ts-scroller::-webkit-scrollbar{height:8px}
+      .timeline-section .ts-scroller::-webkit-scrollbar-thumb{background:#cfcfcf;border-radius:999px}
 
-    .timeline-section .ts-tab{
-      position:relative; background:transparent; border:0; padding:28px 0 0 0;
-      text-align:left; color:var(--ts-ink); cursor:pointer; font:inherit; outline-offset:4px;
-    }
+      .timeline-section .ts-item{ position:relative; flex:0 0 var(--ts-col); min-width:var(--ts-col); align-self:flex-start; }
 
-    .timeline-section .ts-dot{
-      position:absolute; top:-1px; transform:translateY(-50%);
-      width:10px; height:10px; border-radius:50%; background:var(--ts-accent); box-shadow:0 0 0 4px var(--ts-bg);
-    }
-    .timeline-section .ts-label{ display:inline-block; margin-top:12px; font-weight:600; white-space:nowrap; }
-    .timeline-section .ts-tab[aria-selected="true"] .ts-dot{
-      width:14px; height:14px; margin-left:-2px; background:var(--ts-accent); box-shadow:0 0 0 6px var(--ts-accent-ghost);
-    }
-    .timeline-section .ts-tab[aria-selected="true"] .ts-label{ color:var(--ts-accent); }
+      .timeline-section .ts-tab{
+        position:relative; background:transparent; border:0; padding:28px 0 0 0;
+        text-align:left; color:var(--ts-ink); cursor:pointer; font:inherit; outline-offset:4px;
+      }
 
-    /* Dropdown content sits absolutely under the marker but wrapper height is handled by JS */
-    .timeline-section .ts-content{
-      position:absolute; top:48px; left:-8px;
-      width: var(--ts-card-w); max-width: 90vw;
-      background:#fff; border:1px solid var(--ts-border); border-radius:var(--ts-radius);
-      box-shadow:0 10px 24px rgba(0,0,0,.06);
-      padding:16px 16px 18px;
-      visibility:hidden; opacity:0; transform:translateY(8px);
-      transition: opacity .18s ease, transform .18s ease, visibility .18s;
-      pointer-events:none; z-index:2;
-    }
-    .timeline-section .ts-item.is-active .ts-content{ visibility:visible; opacity:1; transform:translateY(0); pointer-events:auto; }
+      .timeline-section .ts-dot{
+        position:absolute; top:-1px; transform:translateY(-50%);
+        width:10px; height:10px; border-radius:50%; background:var(--ts-accent); box-shadow:0 0 0 4px var(--ts-bg);
+      }
+      .timeline-section .ts-label{ display:inline-block; margin-top:12px; font-weight:600; white-space:nowrap; }
+      .timeline-section .ts-tab[aria-selected="true"] .ts-dot{
+        width:14px; height:14px; margin-left:-2px; background:var(--ts-accent); box-shadow:0 0 0 6px var(--ts-accent-ghost);
+      }
+      .timeline-section .ts-tab[aria-selected="true"] .ts-label{ color:var(--ts-accent); }
 
-    .timeline-section .ts-content:before{
-      content:""; position:absolute; top:-8px; left:18px; width:14px; height:14px;
-      background:#fff; border-left:1px solid var(--ts-border); border-top:1px solid var(--ts-border); transform:rotate(45deg);
-    }
+      /* Dropdown content sits absolutely under the marker but wrapper height is handled by JS */
+      .timeline-section .ts-content{
+        position:absolute; top:48px; left:-8px;
+        width: var(--ts-card-w); max-width: 90vw;
+        background:#fff; border:1px solid var(--ts-border); border-radius:var(--ts-radius);
+        box-shadow:0 10px 24px rgba(0,0,0,.06);
+        padding:16px 16px 18px;
+        visibility:hidden; opacity:0; transform:translateY(8px);
+        transition: opacity .18s ease, transform .18s ease, visibility .18s;
+        pointer-events:none; z-index:2;
+      }
+      .timeline-section .ts-item.is-active .ts-content{ visibility:visible; opacity:1; transform:translateY(0); pointer-events:auto; }
 
-    .timeline-section .ts-eyebrow{ display:flex; align-items:center; gap:10px; font-weight:600; color:var(--ts-accent); }
-    .timeline-section .ts-eyebrow .dot{ width:10px; height:10px; border-radius:50%; background:var(--ts-accent); box-shadow:0 0 0 4px var(--ts-accent-ghost); }
-    .timeline-section .ts-title{ font-size:clamp(18px,1.6vw,22px); line-height:1.25; margin:8px 0 6px; font-weight:650; }
-    .timeline-section .ts-desc{ color:var(--ts-ink-dim); line-height:1.6; }
-    .timeline-section .ts-media{ display:flex; gap:14px; align-items:flex-start; }
-    .timeline-section .ts-media img{ width:70px; height:70px; object-fit:cover; border-radius:8px; background:#f6f6f6; }
+      .timeline-section .ts-content:before{
+        content:""; position:absolute; top:-8px; left:18px; width:14px; height:14px;
+        background:#fff; border-left:1px solid var(--ts-border); border-top:1px solid var(--ts-border); transform:rotate(45deg);
+      }
 
-    .timeline-section .ts-nav{ margin-top:16px; display:flex; gap:12px; justify-content:center; }
-    .timeline-section .ts-btn{
-      width:44px; height:44px; border-radius:50%;
-      border:1px solid var(--ts-accent); color:var(--ts-accent);
-      background:#fff; display:inline-grid; place-items:center; cursor:pointer; transition:background .2s, color .2s;
-    }
-    .timeline-section .ts-btn:hover{ background:var(--ts-accent); color:#fff; }
-    .timeline-section .ts-btn:disabled{ opacity:.35; cursor:not-allowed; background:#fafafa; color:#999; border-color:#ddd; }
+      .timeline-section .ts-eyebrow{ display:flex; align-items:center; gap:10px; font-weight:600; color:var(--ts-accent); }
+      .timeline-section .ts-eyebrow .dot{ width:10px; height:10px; border-radius:50%; background:var(--ts-accent); box-shadow:0 0 0 4px var(--ts-accent-ghost); }
+      .timeline-section .ts-title{ font-size:clamp(18px,1.6vw,22px); line-height:1.25; margin:8px 0 6px; font-weight:650; }
+      .timeline-section .ts-desc{ color:var(--ts-ink-dim); line-height:1.6; }
+      .timeline-section .ts-media{ display:flex; gap:14px; align-items:flex-start; }
+      .timeline-section .ts-media img{ width:70px; height:70px; object-fit:cover; border-radius:8px; background:#f6f6f6; }
 
-    @media (max-width:640px){
-      #timeline-{{ section.id }}{ --ts-col:140px; --ts-gap:80px; }
-      .timeline-section .ts-content{ left:-6px; }
-    }
-    @media (prefers-reduced-motion: reduce){
-      .timeline-section .ts-scroller{ scroll-behavior:auto; }
-      .timeline-section .ts-content{ transition:none; }
-    }
+      .timeline-section .ts-nav{ margin-top:16px; display:flex; gap:12px; justify-content:center; }
+      .timeline-section .ts-btn{
+        width:44px; height:44px; border-radius:50%;
+        border:1px solid var(--ts-accent); color:var(--ts-accent);
+        background:#fff; display:inline-grid; place-items:center; cursor:pointer; transition:background .2s, color .2s;
+      }
+      .timeline-section .ts-btn:hover{ background:var(--ts-accent); color:#fff; }
+      .timeline-section .ts-btn:disabled{ opacity:.35; cursor:not-allowed; background:#fafafa; color:#999; border-color:#ddd; }
+
+      @media (max-width:640px){
+        #timeline-{{ section.id }}{ --ts-col:140px; --ts-gap:80px; }
+        .timeline-section .ts-content{ left:-6px; }
+      }
+      @media (prefers-reduced-motion: reduce){
+        .timeline-section .ts-scroller{ scroll-behavior:auto; }
+        .timeline-section .ts-content{ transition:none; }
+      }
   </style>
 
   <div class="ts-inner">
