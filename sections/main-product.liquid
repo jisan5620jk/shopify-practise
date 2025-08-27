@@ -347,50 +347,54 @@
   - Select kora bundle tier expand hobe
   - Baki gulo collapse thakbe
   - Resize e height re-calc hobe
-*/
+  */
   (function () {
-    'use strict';
+    'use strict'; // Strict mode চালু করে, ভুল variable ব্যবহার হলে error দেখাবে
 
     // Active tier expand/collapse
     function updateBundleAccordion(selectedTier) {
+      // সব bundle option গুলো loop করে
       document.querySelectorAll('.bundle-option').forEach((option) => {
-        const tier = parseInt(option.dataset.tier);
-        const container = option.querySelector('.variant-selectors');
-        if (!container) return;
+        const tier = parseInt(option.dataset.tier); // option-এর data-tier attribute থেকে number নেয়
+        const container = option.querySelector('.variant-selectors'); // variant selectors div খুঁজে নেয়
+        if (!container) return; // যদি container না থাকে তাহলে skip করে
 
         if (tier === selectedTier) {
-          option.classList.add('active');
-          // Expand: content-er height onujayi max-height set
+          option.classList.add('active'); // active class add করে
+          // Expand: container height অনুযায়ী max-height set করে (smooth expand)
           container.style.maxHeight = container.scrollHeight + 'px';
         } else {
-          option.classList.remove('active');
-          // Collapse
+          option.classList.remove('active'); // active class remove করে
+          // Collapse: height 0 দেয়
           container.style.maxHeight = '0px';
         }
       });
     }
 
     function initAccordion() {
-      // Initial: pre-selected radio detect
+      // Initial: pre-selected radio detect করে
       const defaultSelected = document.querySelector('input[name="bundle_option"]:checked');
       if (defaultSelected) {
+        // যদি কোন radio আগে থেকে select থাকে, সেই option expand করে
         updateBundleAccordion(parseInt(defaultSelected.value));
       }
 
-      // Change e update
+      // সব radio input-এ change event listener attach করে
       document.querySelectorAll('input[name="bundle_option"]').forEach((radio) => {
         radio.addEventListener('change', (e) => {
+          // যখন user select change করে, তখন corresponding bundle expand হয়
           updateBundleAccordion(parseInt(e.target.value));
         });
       });
 
-      // Resize e active container-er height re-calc
+      // Window resize হলে active container height re-calc করে
       window.addEventListener('resize', () => {
         const active = document.querySelector('.bundle-option.active .variant-selectors');
         if (active) active.style.maxHeight = active.scrollHeight + 'px';
       });
     }
 
+    // DOM fully load হলে accordion initialize করে
     document.addEventListener('DOMContentLoaded', initAccordion);
   })();
 </script>
@@ -398,106 +402,106 @@
 <script>
   /*
   Bundle AJAX Add to Cart (Product Page)
-  - Active bundle-er proti row theke option values collect kora
-  - Correct variant id match kore
-  - Ekbar-e /cart/add.js e multiple line items add
+  - Active bundle-এর প্রতিটি row থেকে option values collect করা
+  - Correct variant id match করা
+  - একবারে /cart/add.js এ multiple line items add
   - Cart count update (optional)
-*/
+  */
   (function () {
-    'use strict';
+    'use strict'; // Strict mode চালু করে, undeclared variable বা অন্য JS ভুল হলে error দেখাবে
 
-    // Simple toast (theme jodi snackbar/drawer thake, replace kore niben)
+    // Simple toast: user কে message দেখানোর জন্য (alert দিয়ে placeholder)
     function toast(msg) {
-      alert(msg);
+      alert(msg); // message popup করে দেখাবে
     }
 
-    // Product JSON (inline theke)
+    // Product JSON inline theke read করা
     function getInlineProductData() {
       try {
-        const el = document.getElementById('product-data');
-        return el ? JSON.parse(el.textContent) : null;
+        const el = document.getElementById('product-data'); // HTML element খুঁজে নেয়
+        return el ? JSON.parse(el.textContent) : null; // যদি element থাকে, JSON parse করে return করে
       } catch (e) {
-        console.warn('Product JSON parse error', e);
+        console.warn('Product JSON parse error', e); // parse error হলে warning দেখাবে
         return null;
       }
     }
 
-    // Fallback: URL theke product JSON fetch (jodi inline miss hoy)
+    // Fallback: যদি inline product JSON না থাকে, URL থেকে fetch করে আনা
     async function fetchProductDataFromHandle() {
       try {
-        const parts = window.location.pathname.split('/').filter(Boolean);
-        const idx = parts.indexOf('products');
-        if (idx === -1 || !parts[idx + 1]) return null;
-        const handle = parts[idx + 1];
-        const res = await fetch('/products/' + handle + '.js');
-        if (!res.ok) return null;
-        return await res.json();
+        const parts = window.location.pathname.split('/').filter(Boolean); // URL parts আলাদা করা
+        const idx = parts.indexOf('products'); // "products" index খুঁজে বের করা
+        if (idx === -1 || !parts[idx + 1]) return null; // যদি product handle না থাকে return null
+        const handle = parts[idx + 1]; // handle extract করা
+        const res = await fetch('/products/' + handle + '.js'); // fetch করে JSON
+        if (!res.ok) return null; // যদি response ঠিক না থাকে return null
+        return await res.json(); // JSON convert করে return
       } catch (e) {
-        console.warn('Product JSON fetch failed', e);
+        console.warn('Product JSON fetch failed', e); // fetch fail হলে warning
         return null;
       }
     }
 
-    // Ensure product data (inline priority)
-    let productDataCache = null;
+    // Ensure product data: inline priority, তারপর fallback fetch
+    let productDataCache = null; // once cache করলে future e reuse হবে
     async function ensureProductData() {
-      if (productDataCache) return productDataCache;
+      if (productDataCache) return productDataCache; // cache থাকলে return
 
-      const inline = getInlineProductData();
+      const inline = getInlineProductData(); // inline check
       if (inline) {
-        productDataCache = inline;
+        productDataCache = inline; // cache update
         return productDataCache;
       }
-      const fetched = await fetchProductDataFromHandle();
+      const fetched = await fetchProductDataFromHandle(); // fallback fetch
       if (fetched) {
         productDataCache = fetched;
         return productDataCache;
       }
-      return null;
+      return null; // data না থাকলে null
     }
 
-    // option values -> variant match (order must be option1, option2, option3)
+    // Option values -> variant match করা (option1, option2, option3 order important)
     function findVariantByOptions(productData, optionValues) {
-      if (!productData || !Array.isArray(productData.variants)) return null;
+      if (!productData || !Array.isArray(productData.variants)) return null; // safeguard
       return (
         productData.variants.find((v) => {
           for (let i = 0; i < optionValues.length; i++) {
-            if ((v['option' + (i + 1)] || '') !== optionValues[i]) return false;
+            if ((v['option' + (i + 1)] || '') !== optionValues[i]) return false; // mismatch হলে false
           }
-          return true;
+          return true; // সব match করলে return true
         }) || null
       );
     }
 
-    // Active bundle wrapper
+    // Active bundle wrapper select করা
     function getActiveBundle() {
-      return document.querySelector('.bundle-option.active');
+      return document.querySelector('.bundle-option.active'); // currently selected bundle
     }
 
-    // Row theke ordered option values (data-option-index onujayi sort)
+    // Row থেকে ordered option values collect করা
     function getOptionValuesFromRow(rowEl) {
-      const selects = rowEl.querySelectorAll('select[data-option-index]');
+      const selects = rowEl.querySelectorAll('select[data-option-index]'); // select field গুলো খুঁজে নেয়
       const ordered = Array.from(selects).sort((a, b) => {
-        return parseInt(a.dataset.optionIndex) - parseInt(b.dataset.optionIndex);
+        return parseInt(a.dataset.optionIndex) - parseInt(b.dataset.optionIndex); // option index অনুযায়ী sort
       });
-      return ordered.map((s) => s.value);
+      return ordered.map((s) => s.value); // ordered values return
     }
 
-    // Active bundle theke items build
+    // Active bundle থেকে line items build করা
     function buildItemsFromActiveBundle(productData) {
       const activeBundle = getActiveBundle();
-      if (!activeBundle) throw new Error('Please select a bundle first.');
+      if (!activeBundle) throw new Error('Please select a bundle first.'); // যদি active bundle না থাকে error
 
-      const tier = parseInt(activeBundle.dataset.tier);
-      const rows = activeBundle.querySelectorAll('.variant-row');
+      const tier = parseInt(activeBundle.dataset.tier); // tier number
+      const rows = activeBundle.querySelectorAll('.variant-row'); // bundle row গুলো
       if (!rows.length) throw new Error('No variant rows found for the selected bundle.');
 
       const items = [];
 
       rows.forEach((rowEl, idx) => {
-        const optionValues = getOptionValuesFromRow(rowEl);
+        const optionValues = getOptionValuesFromRow(rowEl); // row থেকে option values
 
-        // Fallback: jodi kono option nai (single-variant product), first variant use
+        // Fallback: single-variant product
         if (!optionValues.length && productData.variants && productData.variants.length === 1) {
           const onlyVariant = productData.variants[0];
           if (!onlyVariant.available) {
@@ -518,7 +522,7 @@
           throw new Error('Please select options for row #' + (idx + 1));
         }
 
-        const variant = findVariantByOptions(productData, optionValues);
+        const variant = findVariantByOptions(productData, optionValues); // correct variant find
         if (!variant) {
           throw new Error('No matching variant found for row #' + (idx + 1));
         }
@@ -529,8 +533,6 @@
         items.push({
           id: variant.id,
           quantity: 1,
-          // NOTE: Ekhane properties use koray identical line items merge hobena.
-          // Jodi same variant duita row-e select korle merge korte chan, Row property remove kore din.
           properties: {
             Bundle: tier + ' Pair Bundle',
             Row: '#' + (idx + 1),
@@ -538,10 +540,10 @@
         });
       });
 
-      return items;
+      return items; // সব items return
     }
 
-    // POST multiple line items to cart
+    // POST multiple line items to /cart/add.js
     async function addItemsToCart(items) {
       const res = await fetch('/cart/add.js', {
         method: 'POST',
@@ -549,67 +551,60 @@
           'Content-Type': 'application/json',
           Accept: 'application/json',
         },
-        body: JSON.stringify({ items }),
+        body: JSON.stringify({ items }), // items JSON stringify
       });
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err?.description || 'Failed to add to cart.');
+        throw new Error(err?.description || 'Failed to add to cart.'); // error handle
       }
 
-      return res.json();
+      return res.json(); // response return
     }
 
-    // Optional: cart count update (if #cart-count exists)
+    // Optional: cart count update (যদি #cart-count element থাকে)
     async function updateCartCount() {
       try {
-        const cart = await fetch('/cart.js').then((r) => r.json());
-        const el = document.querySelector('#cart-count');
-        if (el) el.textContent = cart.item_count;
+        const cart = await fetch('/cart.js').then((r) => r.json()); // cart fetch
+        const el = document.querySelector('#cart-count'); // element select
+        if (el) el.textContent = cart.item_count; // count update
       } catch (e) {
         console.warn('Cart count update failed', e);
       }
     }
 
+    // init Add to Cart button
     function initAddToCart() {
-      const btn = document.querySelector('.add-to-cart');
+      const btn = document.querySelector('.add-to-cart'); // button select
       if (!btn) return;
 
       btn.addEventListener('click', async (e) => {
-        e.preventDefault();
+        e.preventDefault(); // default form submit prevent
 
-        // Button state
-        const oldText = btn.textContent;
-        btn.disabled = true;
-        btn.textContent = 'Adding...';
+        const oldText = btn.textContent; // old button text save
+        btn.disabled = true; // disable button
+        btn.textContent = 'Adding...'; // show adding
 
         try {
-          // Ensure product data
-          const productData = await ensureProductData();
+          const productData = await ensureProductData(); // product data ensure
           if (!productData) throw new Error('Product data not found. Please include the product JSON.');
 
-          // Build items from current selections
-          const items = buildItemsFromActiveBundle(productData);
+          const items = buildItemsFromActiveBundle(productData); // build items from selections
 
-          // Add to cart via AJAX
-          await addItemsToCart(items);
+          await addItemsToCart(items); // add to cart
 
-          // Optional: update count / open mini cart
-          await updateCartCount();
-          // Example (theme specific):
-          // if (window.ThemeCart && typeof window.ThemeCart.open === 'function') window.ThemeCart.open();
-
-          toast('Bundle added to cart 🎉');
+          await updateCartCount(); // optional cart count update
+          toast('Bundle added to cart 🎉'); // success toast
         } catch (err) {
           console.error(err);
-          toast(err.message || 'Something went wrong. Please try again.');
+          toast(err.message || 'Something went wrong. Please try again.'); // error toast
         } finally {
-          btn.disabled = false;
-          btn.textContent = oldText;
+          btn.disabled = false; // re-enable button
+          btn.textContent = oldText; // old text restore
         }
       });
     }
 
-    document.addEventListener('DOMContentLoaded', initAddToCart);
+    document.addEventListener('DOMContentLoaded', initAddToCart); // DOM loaded হলে init
   })();
 </script>
