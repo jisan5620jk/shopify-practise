@@ -72,8 +72,54 @@
     },
     "timeline_cbJhjx": {
       "type": "timeline",
+      "blocks": {
+        "step_gjmFGC": {
+          "type": "step",
+          "settings": {
+            "label": "Week 1",
+            "title": "The journey begins",
+            "text": "Bioavailable, patented ingredients enter your bloodstream and start to deliver measurable results."
+          }
+        },
+        "step_FEgch3": {
+          "type": "step",
+          "settings": {
+            "label": "Week 1",
+            "title": "The journey begins",
+            "text": "Bioavailable, patented ingredients enter your bloodstream and start to deliver measurable results."
+          }
+        },
+        "step_Cdr9EL": {
+          "type": "step",
+          "settings": {
+            "label": "Week 1",
+            "title": "The journey begins",
+            "text": "Bioavailable, patented ingredients enter your bloodstream and start to deliver measurable results."
+          }
+        },
+        "step_C4H8VD": {
+          "type": "step",
+          "settings": {
+            "label": "Week 1",
+            "title": "The journey begins",
+            "text": "Bioavailable, patented ingredients enter your bloodstream and start to deliver measurable results."
+          }
+        }
+      },
+      "block_order": [
+        "step_gjmFGC",
+        "step_FEgch3",
+        "step_Cdr9EL",
+        "step_C4H8VD"
+      ],
       "name": "Timeline Slider",
-      "settings": {}
+      "settings": {
+        "heading": "The power to transform in weeks",
+        "accent": "#a7754e",
+        "gap": 120,
+        "col_width": 160,
+        "show_nav": true
+      }
     }
   },
   "order": [
