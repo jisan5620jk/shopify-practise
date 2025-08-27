@@ -1,227 +1,408 @@
+{% comment %}
+  Section: Timeline slider (content under the active box)
+  Behavior: Active marker/box select korle oi box-er niche content card show hobe
+{% endcomment %}
+
+<section id="timeline-{{ section.id }}" class="timeline-section">
+  <style>
+    /* ---- Tokens ---- */
+    #timeline-{{ section.id }}{
+      --ts-accent: {{ section.settings.accent | default: '#a7754e' }};
+      --ts-accent-ghost: color-mix(in srgb, var(--ts-accent) 18%, #fff);
+      --ts-ink: #222;
+      --ts-ink-dim: #666;
+      --ts-rail: #d8d8d8;
+      --ts-border: #eaeaea;
+      --ts-bg: #fff;
+
+      --ts-col: {{ section.settings.col_width | default: 160 }}px; /* each marker column width */
+      --ts-gap: {{ section.settings.gap | default: 120 }}px;      /* gap between markers */
+      --ts-card-w: clamp(280px, 44vw, 520px);                      /* content card width */
+      --ts-space-below: 260px; /* bottom space under rail so card has room */
+      --ts-radius: 12px;
+    }
+
+    /* ---- Layout ---- */
+    #timeline-{{ section.id }} .ts-inner{
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 20px 60px;
+      color: var(--ts-ink);
+      background: var(--ts-bg);
+    }
+
+    #timeline-{{ section.id }} .ts-heading{
+      font-size: clamp(24px, 2.4vw, 40px);
+      line-height: 1.15;
+      margin: 0 0 28px 0;
+      font-weight: 650;
+      letter-spacing: -0.01em;
+    }
+
+    /* ---- Rail + scroller ---- */
+    #timeline-{{ section.id }} .ts-rail-wrap{
+      position: relative;
+      padding-bottom: var(--ts-space-below);
+    }
+
+    #timeline-{{ section.id }} .ts-scroller{
+      position: relative;
+      display: flex;
+      gap: var(--ts-gap);
+      overflow-x: auto;
+      overflow-y: visible; /* allow dropdown content to overflow */
+      scroll-behavior: smooth;
+      scrollbar-width: thin;
+      padding: 56px 16px 10px;
+      border-top: 2px solid var(--ts-rail);
+    }
+    #timeline-{{ section.id }} .ts-scroller::-webkit-scrollbar{height:8px}
+    #timeline-{{ section.id }} .ts-scroller::-webkit-scrollbar-thumb{background:#cfcfcf;border-radius:999px}
+
+    #timeline-{{ section.id }} .ts-item{
+      position: relative;
+      flex: 0 0 var(--ts-col);
+      min-width: var(--ts-col);
+      align-self: flex-start;
+    }
+
+    #timeline-{{ section.id }} .ts-tab{
+      position: relative;
+      background: transparent;
+      border: 0;
+      padding: 28px 0 0 0;
+      text-align: left;
+      color: var(--ts-ink);
+      cursor: pointer;
+      font: inherit;
+      outline-offset: 4px;
+    }
+
+    /* dot on the rail */
+    #timeline-{{ section.id }} .ts-dot{
+      position: absolute;
+      top: -1px;
+      transform: translateY(-50%);
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--ts-accent);
+      box-shadow: 0 0 0 4px var(--ts-bg);
+    }
+
+    #timeline-{{ section.id }} .ts-label{
+      display: inline-block;
+      margin-top: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    /* active marker */
+    #timeline-{{ section.id }} .ts-tab[aria-selected="true"] .ts-dot{
+      width: 14px; height: 14px; margin-left: -2px;
+      background: var(--ts-accent);
+      box-shadow: 0 0 0 6px var(--ts-accent-ghost);
+    }
+    #timeline-{{ section.id }} .ts-tab[aria-selected="true"] .ts-label{ color: var(--ts-accent); }
+
+    /* ---- The dropdown content card (under active marker) ---- */
+    #timeline-{{ section.id }} .ts-content{
+      position: absolute;
+      top: 48px;           /* below the rail */
+      left: -8px;          /* slight left from marker */
+      width: var(--ts-card-w);
+      max-width: 90vw;
+      background: #fff;
+      border: 1px solid var(--ts-border);
+      border-radius: var(--ts-radius);
+      box-shadow: 0 10px 24px rgba(0,0,0,.06);
+      padding: 16px 16px 18px;
+      visibility: hidden;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity .18s ease, transform .18s ease, visibility .18s;
+      pointer-events: none;
+      z-index: 2;
+    }
+    #timeline-{{ section.id }} .ts-item.is-active .ts-content{
+      visibility: visible; opacity: 1; transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    /* small arrow pointer */
+    #timeline-{{ section.id }} .ts-content:before{
+      content: "";
+      position: absolute;
+      top: -8px; left: 18px;
+      width: 14px; height: 14px;
+      background: #fff;
+      border-left: 1px solid var(--ts-border);
+      border-top: 1px solid var(--ts-border);
+      transform: rotate(45deg);
+    }
+
+    #timeline-{{ section.id }} .ts-eyebrow{
+      display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--ts-accent);
+    }
+    #timeline-{{ section.id }} .ts-eyebrow .dot{
+      width: 10px; height: 10px; border-radius: 50%; background: var(--ts-accent);
+      box-shadow: 0 0 0 4px var(--ts-accent-ghost);
+    }
+    #timeline-{{ section.id }} .ts-title{
+      font-size: clamp(18px, 1.6vw, 22px);
+      line-height: 1.25; margin: 8px 0 6px; font-weight: 650;
+    }
+    #timeline-{{ section.id }} .ts-desc{ color: var(--ts-ink-dim); line-height: 1.6; }
+
+    #timeline-{{ section.id }} .ts-media{ display: flex; gap: 14px; align-items: flex-start; }
+    #timeline-{{ section.id }} .ts-media img{
+      width: 70px; height: 70px; object-fit: cover; border-radius: 8px; background: #f6f6f6;
+    }
+
+    /* ---- Nav arrows ---- */
+    #timeline-{{ section.id }} .ts-nav{
+      margin-top: 16px; display: flex; gap: 12px; justify-content: center;
+    }
+    #timeline-{{ section.id }} .ts-btn{
+      width: 44px; height: 44px; border-radius: 50%;
+      border: 1px solid var(--ts-accent); color: var(--ts-accent);
+      background: #fff; display: inline-grid; place-items: center; cursor: pointer;
+      transition: background .2s, color .2s;
+    }
+    #timeline-{{ section.id }} .ts-btn:hover{ background: var(--ts-accent); color:#fff; }
+    #timeline-{{ section.id }} .ts-btn:disabled{
+      opacity:.35; cursor:not-allowed; background:#fafafa; color:#999; border-color:#ddd;
+    }
+
+    @media (max-width: 640px){
+      #timeline-{{ section.id }}{ --ts-col: 140px; --ts-gap: 80px; }
+      #timeline-{{ section.id }} .ts-content{ left: -6px; }
+    }
+    @media (prefers-reduced-motion: reduce){
+      #timeline-{{ section.id }} .ts-scroller{ scroll-behavior: auto; }
+      #timeline-{{ section.id }} .ts-content{ transition: none; }
+    }
+  </style>
+
+  <div class="ts-inner">
+    {% if section.settings.heading != blank %}
+      <h2 class="ts-heading">{{ section.settings.heading }}</h2>
+    {% endif %}
+
+    <div class="ts-rail-wrap">
+      <div class="ts-scroller" role="tablist" aria-label="Timeline steps">
+        {% for block in section.blocks %}
+          {% assign i = forloop.index0 %}
+          {% assign tab_id = 'tab-' | append: section.id | append: '-' | append: i %}
+          {% assign panel_id = 'panel-' | append: section.id | append: '-' | append: i %}
+          <div class="ts-item {% if forloop.first %}is-active{% endif %}" {{ block.shopify_attributes }}>
+            <button
+              id="{{ tab_id }}"
+              class="ts-tab"
+              role="tab"
+              aria-controls="{{ panel_id }}"
+              aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+              data-index="{{ i }}"
+              type="button"
+            >
+              <span class="ts-dot" aria-hidden="true"></span>
+              <span class="ts-label">{{ block.settings.label | default: 'Week ' | append: forloop.index }}</span>
+            </button>
+
+            <div id="{{ panel_id }}" class="ts-content" role="tabpanel" aria-labelledby="{{ tab_id }}">
+              <div class="ts-media">
+                {% if block.settings.image != blank %}
+                  <img
+                    src="{{ block.settings.image | image_url: width: 180 }}"
+                    alt="{{ block.settings.image.alt | escape }}"
+                    loading="lazy"
+                    width="70"
+                    height="70"
+                  >
+                {% endif %}
+                <div>
+                  <div class="ts-eyebrow">
+                    <span class="dot" aria-hidden="true"></span>
+                    <span>{{ block.settings.label | default: 'Week ' | append: forloop.index }}</span>
+                  </div>
+                  {% if block.settings.title != blank %}
+                    <div class="ts-title">{{ block.settings.title }}</div>
+                  {% endif %}
+                  {% if block.settings.text != blank %}
+                    <div class="ts-desc">{{ block.settings.text }}</div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      {% if section.settings.show_nav %}
+        <div class="ts-nav">
+          <button class="ts-btn ts-prev" aria-label="Previous">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+            </svg>
+          </button>
+          <button class="ts-btn ts-next" aria-label="Next">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M8.59 16.59 10 18l6-6-6-6-1.41 1.41L13.17 12z"/>
+            </svg>
+          </button>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const $section = document.getElementById('timeline-{{ section.id }}');
+      if (!$section) return;
+
+      const $scroller = $section.querySelector('.ts-scroller');
+      const $items = Array.from($section.querySelectorAll('.ts-item'));
+      const $tabs = Array.from($section.querySelectorAll('.ts-tab'));
+      const $prev = $section.querySelector('.ts-prev');
+      const $next = $section.querySelector('.ts-next');
+
+      let current = 0;
+
+      function clamp(n, min, max) {
+        return Math.max(min, Math.min(max, n));
+      }
+
+      function setActive(index, opts = { scroll: true, focus: false }) {
+        index = clamp(index, 0, $items.length - 1);
+        if (current === index) {
+          if (opts.scroll) centerItem(index);
+          updateNav();
+          return;
+        }
+        // deactivate previous
+        $items[current]?.classList.remove('is-active');
+        $tabs[current]?.setAttribute('aria-selected', 'false');
+
+        // activate next
+        current = index;
+        $items[current]?.classList.add('is-active');
+        $tabs[current]?.setAttribute('aria-selected', 'true');
+
+        if (opts.scroll) centerItem(index);
+        if (opts.focus) $tabs[current]?.focus({ preventScroll: true });
+        updateNav();
+      }
+
+      function centerItem(index) {
+        const tab = $tabs[index];
+        if (!tab) return;
+        const box = tab.getBoundingClientRect();
+        const parent = $scroller.getBoundingClientRect();
+        const delta = box.left + box.width / 2 - (parent.left + parent.width / 2);
+        $scroller.scrollBy({ left: delta, behavior: 'smooth' });
+      }
+
+      function updateNav() {
+        if ($prev) $prev.disabled = current <= 0;
+        if ($next) $next.disabled = current >= $items.length - 1;
+      }
+
+      // events
+      $tabs.forEach((tab, i) => {
+        tab.addEventListener('click', () => setActive(i, { scroll: true, focus: false }));
+        tab.addEventListener('keydown', (e) => {
+          if (e.key === 'ArrowRight') {
+            setActive(i + 1, { scroll: true, focus: true });
+            e.preventDefault();
+          }
+          if (e.key === 'ArrowLeft') {
+            setActive(i - 1, { scroll: true, focus: true });
+            e.preventDefault();
+          }
+          if (e.key === 'Home') {
+            setActive(0, { scroll: true, focus: true });
+            e.preventDefault();
+          }
+          if (e.key === 'End') {
+            setActive($items.length - 1, { scroll: true, focus: true });
+            e.preventDefault();
+          }
+        });
+      });
+
+      $prev?.addEventListener('click', () => setActive(current - 1, { scroll: true, focus: true }));
+      $next?.addEventListener('click', () => setActive(current + 1, { scroll: true, focus: true }));
+
+      // init
+      setActive(0, { scroll: false, focus: false });
+      updateNav();
+
+      // Editor support
+      document.addEventListener('shopify:block:select', (e) => {
+        const idx = Number(e.target?.querySelector('.ts-tab')?.dataset?.index);
+        if (!Number.isNaN(idx)) setActive(idx, { scroll: true, focus: true });
+      });
+    })();
+  </script>
+</section>
+
 {% schema %}
 {
-  "name": "Draggable Timeline",
+  "name": "Timeline slider",
+  "tag": "section",
+  "class": "timeline-under-slider",
   "settings": [
+    { "type": "text", "id": "heading", "label": "Heading", "default": "The power to transform in weeks" },
+    { "type": "color", "id": "accent", "label": "Accent color", "default": "#a7754e" },
     {
-      "type": "text",
-      "id": "heading",
-      "label": "Section Heading",
-      "default": "Our Timeline"
-    }
+      "type": "range",
+      "id": "gap",
+      "label": "Gap between markers",
+      "min": 60,
+      "max": 240,
+      "step": 4,
+      "unit": "px",
+      "default": 120
+    },
+    {
+      "type": "range",
+      "id": "col_width",
+      "label": "Marker column width",
+      "min": 120,
+      "max": 240,
+      "step": 5,
+      "unit": "px",
+      "default": 160
+    },
+    { "type": "checkbox", "id": "show_nav", "label": "Show arrow navigation", "default": true }
   ],
   "blocks": [
     {
       "type": "step",
       "name": "Step",
       "settings": [
+        { "type": "text", "id": "label", "label": "Label (e.g. Week 1)", "default": "Week 1" },
+        { "type": "text", "id": "title", "label": "Title", "default": "The journey begins" },
         {
-          "type": "text",
-          "id": "title",
-          "label": "Step Title",
-          "default": "Step Title"
+          "type": "textarea",
+          "id": "text",
+          "label": "Description",
+          "default": "Bioavailable, patented ingredients enter your bloodstream and start to deliver measurable results."
         },
-        {
-          "type": "text",
-          "id": "content",
-          "label": "Step Content",
-          "default": "Step description goes here."
-        }
+        { "type": "image_picker", "id": "image", "label": "Image" }
       ]
     }
   ],
-  "max_blocks": 8,
   "presets": [
     {
-      "name": "Draggable Timeline",
-      "category": "Custom"
+      "name": "Timeline slider (under active card)",
+      "category": "Custom",
+      "blocks": [
+        { "type": "step", "settings": { "label": "Week 1", "title": "The journey begins" } },
+        { "type": "step", "settings": { "label": "Week 2", "title": "Momentum builds" } },
+        { "type": "step", "settings": { "label": "Week 3", "title": "Noticeable changes" } },
+        { "type": "step", "settings": { "label": "Week 4", "title": "Compounding benefits" } },
+        { "type": "step", "settings": { "label": "Beyond", "title": "Long-term transformation" } }
+      ]
     }
   ]
 }
 {% endschema %}
-
-<section class="timeline-section" id="timeline-{{ section.id }}">
-  <div class="page-width">
-    {% if section.settings.heading != blank %}
-      <h2 class="ts-heading">{{ section.settings.heading }}</h2>
-    {% endif %}
-
-    <!-- Rail + Handle -->
-    <div class="ts-rail-wrap">
-      <div class="ts-rail"></div>
-      <div class="ts-handle"></div>
-      <div class="ts-steps">
-        {% for block in section.blocks %}
-          <div class="ts-step {% if forloop.first %}active{% endif %}" data-index="{{ forloop.index0 }}"></div>
-        {% endfor %}
-      </div>
-    </div>
-
-    <!-- Contents -->
-    <div class="ts-scroller">
-      {% for block in section.blocks %}
-        <div class="ts-item {% if forloop.first %}active{% endif %}" data-index="{{ forloop.index0 }}">
-          <h4>{{ block.settings.title }}</h4>
-          <p>{{ block.settings.content }}</p>
-        </div>
-      {% endfor %}
-    </div>
-  </div>
-</section>
-
-<style>
-  #timeline-{{ section.id }} {
-    position: relative;
-    padding: 60px 20px;
-  }
-
-  #timeline-{{ section.id }} .ts-heading {
-    text-align: center;
-    margin-bottom: 40px;
-  }
-
-  /* Rail */
-  #timeline-{{ section.id }} .ts-rail-wrap {
-    position: relative;
-    height: 60px;
-    margin-bottom: 40px;
-  }
-
-  #timeline-{{ section.id }} .ts-rail {
-    position: absolute;
-    top: 29px;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: #ddd;
-  }
-
-  /* Steps */
-  #timeline-{{ section.id }} .ts-steps {
-    position: absolute;
-    top: 20px;
-    left: 0;
-    right: 0;
-    display: flex;
-    justify-content: space-between;
-  }
-
-  #timeline-{{ section.id }} .ts-step {
-    width: 20px;
-    height: 20px;
-    background: #bbb;
-    border-radius: 50%;
-    cursor: pointer;
-    transition: background .3s;
-  }
-  #timeline-{{ section.id }} .ts-step.active {
-    background: #000;
-  }
-
-  /* Draggable Handle */
-  #timeline-{{ section.id }} .ts-handle {
-    position: absolute;
-    top: 20px;
-    left: 0;
-    width: 24px;
-    height: 24px;
-    background: #000;
-    border-radius: 50%;
-    cursor: grab;
-    transform: translateX(-50%);
-    z-index: 2;
-    transition: left .3s;
-  }
-
-  /* Items */
-  #timeline-{{ section.id }} .ts-scroller {
-    display: flex;
-    justify-content: center;
-    gap: 30px;
-    flex-wrap: wrap;
-  }
-
-  #timeline-{{ section.id }} .ts-item {
-    width: 200px;
-    padding: 20px;
-    background: #f5f5f5;
-    border-radius: 8px;
-    text-align: center;
-    transition: transform .3s, background .3s;
-  }
-  #timeline-{{ section.id }} .ts-item.active {
-    background: #000;
-    color: #fff;
-    transform: scale(1.05);
-  }
-</style>
-
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const section = document.querySelector('#timeline-{{ section.id }}');
-    const rail = section.querySelector('.ts-rail');
-    const handle = section.querySelector('.ts-handle');
-    const steps = section.querySelectorAll('.ts-step');
-    const items = section.querySelectorAll('.ts-item');
-
-    let isDragging = false;
-    let railRect, railWidth;
-
-    function setActive(index) {
-      steps.forEach((s, i) => s.classList.toggle('active', i === index));
-      items.forEach((it, i) => it.classList.toggle('active', i === index));
-      let step = steps[index];
-      handle.style.left = step.offsetLeft + 'px';
-    }
-
-    function setHandlePosition(x) {
-      x = Math.max(0, Math.min(x, railWidth));
-      handle.style.left = x + 'px';
-      let step = railWidth / (steps.length - 1);
-      let index = Math.round(x / step);
-      setActive(index);
-    }
-
-    handle.addEventListener('mousedown', (e) => {
-      isDragging = true;
-      railRect = rail.getBoundingClientRect();
-      railWidth = railRect.width;
-    });
-
-    document.addEventListener('mousemove', (e) => {
-      if (!isDragging) return;
-      let x = e.clientX - railRect.left;
-      setHandlePosition(x);
-    });
-
-    document.addEventListener('mouseup', () => {
-      isDragging = false;
-    });
-
-    // Touch support
-    handle.addEventListener('touchstart', (e) => {
-      isDragging = true;
-      railRect = rail.getBoundingClientRect();
-      railWidth = railRect.width;
-    });
-
-    document.addEventListener('touchmove', (e) => {
-      if (!isDragging) return;
-      let x = e.touches[0].clientX - railRect.left;
-      setHandlePosition(x);
-    });
-
-    document.addEventListener('touchend', () => {
-      isDragging = false;
-    });
-
-    // Click support (old logic)
-    steps.forEach((step, index) => {
-      step.addEventListener('click', () => {
-        setActive(index);
-      });
-    });
-
-    // Init
-    setActive(0);
-  });
-</script>
