@@ -69,12 +69,18 @@
       "settings": {
         "product": "long-dress-caro-line-5"
       }
+    },
+    "timeline_cbJhjx": {
+      "type": "timeline",
+      "name": "Timeline Slider",
+      "settings": {}
     }
   },
   "order": [
     "image_banner",
     "product_raUyJW",
     "featured_collection_4WgDgx",
-    "featured_product_kHMQUn"
+    "featured_product_kHMQUn",
+    "timeline_cbJhjx"
   ]
 }
