@@ -48,13 +48,6 @@
         "show_text_below": false
       }
     },
-    "product_raUyJW": {
-      "type": "product",
-      "name": "Featured Product",
-      "settings": {
-        "product": "caro-dress"
-      }
-    },
     "featured_collection_4WgDgx": {
       "type": "featured-collection",
       "name": "t:sections.featured-collection.presets.name",
@@ -125,7 +118,6 @@
   },
   "order": [
     "image_banner",
-    "product_raUyJW",
     "featured_collection_4WgDgx",
     "featured_product_kHMQUn",
     "timeline_cbJhjx"
